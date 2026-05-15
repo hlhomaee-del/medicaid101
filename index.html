@@ -211,7 +211,7 @@ textarea:focus,input:focus{outline:4px solid rgba(56,189,248,.25);border-color:#
       <p>Interactive lessons, animated maps, flashcards, practice questions, a timed challenge, reflection, and a printable study report.</p>
     </div>
     <div class="top-actions">
-      <button class="btn-green" onclick="buildSummary();window.print()">🖨️ Print / Save PDF</button>
+      <button class="btn-green" onclick="printFullReport()">🖨️ Print / Save PDF</button>
       <button class="btn-dark" id="soundBtn" onclick="toggleSound()">🔊 Sound On</button>
     </div>
   </div>
@@ -320,6 +320,8 @@ textarea:focus,input:focus{outline:4px solid rgba(56,189,248,.25);border-color:#
     </div>
   </div>
 </section>
+
+<section id="fullPrintReport" class="print-only print-report"></section>
 <div class="footer">Instructional design by Hilary Homaii · All rights reserved</div>
 </main>
 
@@ -561,6 +563,52 @@ function showTestResults() {
   <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>#</th><th>Result</th><th>Correct Answer</th><th>Strategy</th></tr></thead><tbody>${QUESTIONS.map((q,i)=>`<tr><td>${i+1}</td><td>${state.test[q.id]?.correct?'Correct':'Review'}</td><td>${q.correctText}</td><td>${q.strategy}</td></tr>`).join('')}</tbody></table></div>`;
   renderTestMap();
 }
+
+function escPrint(v){return String(v ?? '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));}
+function printChoiceBlock(q){
+  return q.choices.map(c=>{
+    const isCorrect=c.id===q.correctId;
+    const cls=isCorrect?'print-answer':'print-wrong';
+    const label=isCorrect?'Correct answer':'Review this option';
+    return `<div class="${cls}"><b>${escPrint(c.text)}</b> <span class="badge">${label}</span><br>${escPrint(q.rationales?.[c.id] || '')}</div>`;
+  }).join('');
+}
+function buildFullPrintReport(){
+  buildSummary();
+  const practiceVals=ALLQ.map(q=>state.practice[q.id]).filter(Boolean);
+  const pGood=practiceVals.filter(x=>x.correct).length;
+  const testVals=QUESTIONS.map(q=>state.test[q.id]).filter(Boolean);
+  const tGood=testVals.filter(x=>x.correct).length;
+  const studyItems=[];
+  Object.keys(state.study).filter(k=>state.study[k]).forEach(k=>{
+    if(k.startsWith('f')) studyItems.push('Flashcard: '+(FLASH[+k.slice(1)]?.front || ''));
+    else if(k.startsWith('t')) {const q=QUESTIONS.find(x=>'t'+x.id===k); if(q) studyItems.push('Challenge Q'+q.n+': '+q.correctText);}
+    else {const q=ALLQ.find(x=>x.id===k); if(q) studyItems.push('Practice Q'+q.n+': '+q.correctText);}
+  });
+  const lessonHtml=LESSONS.map((l,i)=>`<div class="print-card print-lesson"><span class="badge">Lesson ${i+1}: ${escPrint(l.tag)}</span><h3>${escPrint(l.title)}</h3><p>${escPrint(l.body)}</p><div class="print-strategy"><b>Strategy from Hilary:</b> ${escPrint(lessonTip(l.id))}</div></div>`).join('');
+  const flashHtml=FLASH.map((f,i)=>`<div class="print-card print-flash"><span class="badge">Flashcard ${i+1}</span> <span class="badge">${escPrint(f.cat)}</span><h3>${escPrint(f.front)}</h3><p><b>Answer:</b> ${escPrint(f.back)}</p><div class="print-answer"><b>Concept check:</b> ${escPrint(f.check)}<br><b>Correct:</b> ${escPrint(f.opts[f.ans])}</div><div class="print-hint"><b>All choices:</b> ${f.opts.map(o=>escPrint(o)).join(' · ')}</div></div>`).join('');
+  const practiceHtml=ALLQ.map((q,i)=>`<div class="print-card print-question"><span class="badge">Practice ${i+1}</span><h3>${escPrint(q.question)}</h3><div class="print-strategy"><b>Strategy from Hilary:</b> ${escPrint(q.strategy)}</div>${printChoiceBlock(q)}</div>`).join('');
+  const testHtml=QUESTIONS.map((q,i)=>`<div class="print-card print-question"><span class="badge">Challenge ${i+1}</span><h3>${escPrint(q.question)}</h3><div class="print-strategy"><b>Strategy from Hilary:</b> ${escPrint(q.strategy)}</div>${printChoiceBlock(q)}</div>`).join('');
+  const reflections=`<table class="print-table"><tr><th>Reflection prompt</th><th>Student response</th></tr><tr><td>Most confusing Medicaid idea</td><td>${escPrint(document.getElementById('ref1')?.value || '')}</td></tr><tr><td>Clue that helped</td><td>${escPrint(document.getElementById('ref2')?.value || '')}</td></tr><tr><td>Review plan</td><td>${escPrint(document.getElementById('ref3')?.value || '')}</td></tr></table>`;
+  document.getElementById('fullPrintReport').innerHTML=`
+    <div class="print-cover">
+      <h1>Medicaid Mastery Lab — Full Color Study Packet</h1>
+      <p><b>Chapter 15 Medicaid</b> · Interactive lessons, flashcards, practice rationales, challenge test answers, reflection, and study plan.</p>
+      <table class="print-table"><tr><th>Area</th><th>Status</th></tr><tr><td>Lessons opened</td><td>${Object.keys(state.lessons).length} / ${LESSONS.length}</td></tr><tr><td>Flashcards studied</td><td>${Object.values(state.flash).filter(x=>x.studied).length} / ${FLASH.length}</td></tr><tr><td>Guided practice</td><td>${practiceVals.length?`${pGood} / ${practiceVals.length} correct`:'Not completed'}</td></tr><tr><td>Timed challenge</td><td>${testVals.length?`${tGood} / ${testVals.length} correct`:'Not completed'}</td></tr></table>
+      <h3>Need to study</h3><p>${studyItems.length?studyItems.map(x=>'• '+escPrint(x)).join('<br>'):'None marked yet.'}</p>
+    </div>
+    <div class="print-section"><h2>1. Medicaid Lessons</h2>${lessonHtml}</div>
+    <div class="print-section"><h2>2. Flashcards + Concept Checks</h2>${flashHtml}</div>
+    <div class="print-section"><h2>3. Guided Practice — Answers in Color</h2>${practiceHtml}</div>
+    <div class="print-section"><h2>4. Challenge Test — Answers in Color</h2>${testHtml}</div>
+    <div class="print-section"><h2>5. Reflection + Student Summary</h2>${reflections}<pre class="print-card" style="white-space:pre-wrap">${escPrint(document.getElementById('summaryBox')?.textContent || '')}</pre></div>
+    <div class="print-section"><p><b>Instructional design by Hilary Homaii · All rights reserved</b></p></div>`;
+}
+function printFullReport(){
+  buildFullPrintReport();
+  setTimeout(()=>window.print(), 80);
+}
+
 function buildSummary() {
   const practiceVals=ALLQ.map(q=>state.practice[q.id]).filter(Boolean);
   const pGood=practiceVals.filter(x=>x.correct).length;
