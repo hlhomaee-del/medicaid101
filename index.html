@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Medicaid Mastery Lab | Interactive Billing & Coding</title>
+<style>
+:root {
+  --ink:#122033; --muted:#5a6b86; --paper:#fff; --blue:#1d4ed8; --cyan:#06b6d4;
+  --purple:#7c3aed; --pink:#db2777; --orange:#f97316; --green:#16a34a; --red:#dc2626;
+  --gold:#facc15; --teal:#0d9488; --navy:#0f172a;
+}
+*{box-sizing:border-box}
+body {
+  margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color:var(--ink); min-height:100vh; overflow-x:hidden;
+  background:
+    radial-gradient(circle at 5% 10%, rgba(56,189,248,.32), transparent 28%),
+    radial-gradient(circle at 85% 8%, rgba(217,70,239,.28), transparent 30%),
+    radial-gradient(circle at 75% 85%, rgba(250,204,21,.22), transparent 28%),
+    radial-gradient(circle at 10% 90%, rgba(34,197,94,.20), transparent 28%),
+    linear-gradient(135deg,#eef6ff 0%, #fff7ed 45%, #f5f3ff 100%);
+}
+body:before {
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.25;
+  background-image: linear-gradient(rgba(15,23,42,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.04) 1px, transparent 1px);
+  background-size: 34px 34px; z-index:-1;
+}
+header {
+  padding:24px; position:sticky; top:0; z-index:10; backdrop-filter: blur(16px);
+  background:rgba(255,255,255,.62); border-bottom:1px solid rgba(255,255,255,.7);
+}
+.hero {
+  max-width:1200px; margin:auto; display:flex; gap:18px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+}
+.brand h1 {margin:0; font-size:clamp(1.6rem,4vw,3rem); line-height:1.02; letter-spacing:-.05em}
+.brand p {margin:8px 0 0; color:var(--muted); font-size:1rem; max-width:760px}
+.pill {display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; font-weight:800; color:white; background:linear-gradient(135deg,var(--blue),var(--purple)); box-shadow:0 8px 20px rgba(29,78,216,.2)}
+.top-actions{display:flex; gap:10px; flex-wrap:wrap}
+button, .btn {
+  border:0; border-radius:16px; padding:12px 16px; font-weight:900; cursor:pointer; transition:.18s transform,.18s box-shadow,.18s filter;
+  color:#fff; box-shadow:0 10px 20px rgba(15,23,42,.13); letter-spacing:.01em;
+}
+button:hover,.btn:hover{transform:translateY(-2px); filter:saturate(1.12)}
+button:active{transform:translateY(0)}
+.btn-blue{background:linear-gradient(135deg,#2563eb,#06b6d4)}
+.btn-purple{background:linear-gradient(135deg,#7c3aed,#db2777)}
+.btn-green{background:linear-gradient(135deg,#16a34a,#14b8a6)}
+.btn-orange{background:linear-gradient(135deg,#f97316,#facc15); color:#3b2500}
+.btn-red{background:linear-gradient(135deg,#ef4444,#be123c)}
+.btn-dark{background:linear-gradient(135deg,#0f172a,#334155)}
+.btn-light{background:linear-gradient(135deg,#e0f2fe,#fce7f3); color:#0f172a; border:1px solid rgba(15,23,42,.08)}
+nav {
+  max-width:1200px; margin:16px auto 0; display:grid; grid-template-columns:repeat(6,minmax(110px,1fr)); gap:10px;
+}
+.navbtn{padding:12px 10px; font-size:.9rem; min-height:52px}
+.navbtn.active{outline:4px solid rgba(250,204,21,.55); transform:translateY(-2px)}
+main{max-width:1200px; margin:26px auto; padding:0 18px 80px}
+.page{display:none; animation:rise .35s ease}
+.page.active{display:block}
+@keyframes rise{from{opacity:0; transform:translateY(12px)}to{opacity:1; transform:none}}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px}
+.card {
+  background:rgba(255,255,255,.82); border:1px solid rgba(255,255,255,.9); border-radius:28px; padding:22px;
+  box-shadow:0 20px 60px rgba(30,41,59,.12); backdrop-filter:blur(14px);
+}
+.glow{position:relative; overflow:hidden}
+.glow:after{content:""; position:absolute; width:160px; height:160px; border-radius:50%; right:-60px; top:-70px; background:rgba(6,182,212,.2)}
+.section-title{font-size:2rem; letter-spacing:-.04em; margin:0 0 8px}
+.section-sub{color:var(--muted); margin:0 0 18px; line-height:1.55}
+.stat{display:flex; align-items:center; gap:14px}
+.stat .bubble{height:54px;width:54px;border-radius:18px;display:grid;place-items:center;color:white;font-size:1.5rem;box-shadow:inset 0 0 20px rgba(255,255,255,.25)}
+.b1{background:linear-gradient(135deg,#2563eb,#06b6d4)} .b2{background:linear-gradient(135deg,#7c3aed,#db2777)} .b3{background:linear-gradient(135deg,#f97316,#facc15)} .b4{background:linear-gradient(135deg,#16a34a,#14b8a6)}
+.progressbar{height:14px;border-radius:999px;background:#e2e8f0;overflow:hidden}
+.progressbar > div{height:100%;width:0;background:linear-gradient(90deg,#22c55e,#06b6d4,#7c3aed);transition:.3s}
+.lesson-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.lesson-tab{font-size:.9rem;padding:10px 12px;border-radius:14px;background:linear-gradient(135deg,#dbeafe,#f5d0fe);color:#172554;box-shadow:none}
+.lesson-tab.active{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
+.lesson-stage{min-height:330px; position:relative}
+.flowline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0}
+.node{padding:14px 16px;border-radius:18px;color:white;font-weight:900;min-width:135px;text-align:center;position:relative;animation:pulse 2.3s infinite ease-in-out}
+.node:nth-child(1){background:linear-gradient(135deg,#2563eb,#06b6d4)}.node:nth-child(3){background:linear-gradient(135deg,#7c3aed,#db2777)}.node:nth-child(5){background:linear-gradient(135deg,#f97316,#facc15);color:#2c1600}.node:nth-child(7){background:linear-gradient(135deg,#16a34a,#14b8a6)}
+.arrow{font-size:1.9rem;color:#64748b;animation:slide 1.4s infinite alternate}
+@keyframes slide{from{transform:translateX(-3px)}to{transform:translateX(5px)}}
+@keyframes pulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:18px}
+.compare .mini{border-radius:24px;padding:20px 18px;color:white;min-height:172px;transform:translateY(0);box-shadow:0 18px 35px rgba(15,23,42,.22), inset 0 1px 0 rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.35);transition:.18s transform,.18s box-shadow}
+.compare .mini:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 24px 48px rgba(15,23,42,.28), inset 0 1px 0 rgba(255,255,255,.34)}
+.mini h3{margin:0 0 10px;font-size:1.45rem;font-weight:1000;letter-spacing:-.03em;text-shadow:0 2px 8px rgba(0,0,0,.18)} .mini p{line-height:1.6;font-size:1.05rem;font-weight:750}
+.term-chip{display:inline-flex;align-items:center;margin:3px 4px 3px 0;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.23);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 14px rgba(15,23,42,.14);font-weight:1000;position:relative;cursor:help;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.term-chip::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%) translateY(4px);width:min(280px,70vw);background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.18);padding:10px 12px;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.30);font-size:.84rem;line-height:1.35;font-weight:700;text-decoration:none;opacity:0;visibility:hidden;pointer-events:none;z-index:40}
+.term-chip::before{content:"";position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);border:7px solid transparent;border-top-color:#0f172a;opacity:0;visibility:hidden;z-index:41}
+.term-chip:hover::after,.term-chip:hover::before,.term-chip:focus::after,.term-chip:focus::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.mini:nth-child(1){background:linear-gradient(135deg,#2563eb,#0891b2)}.mini:nth-child(2){background:linear-gradient(135deg,#7c3aed,#be185d)}.mini:nth-child(3){background:linear-gradient(135deg,#ea580c,#eab308);color:#2c1600}.mini:nth-child(4){background:linear-gradient(135deg,#059669,#0d9488)}
+.table-wrap{overflow:auto;border-radius:22px;border:1px solid #dbeafe;background:white}
+table{width:100%;border-collapse:collapse} th,td{padding:13px 14px;text-align:left;border-bottom:1px solid #e2e8f0} th{background:#0f172a;color:white} tr:nth-child(even){background:#f8fafc}
+.activity-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.term,.bucket{padding:13px;border-radius:18px;border:2px dashed #cbd5e1;background:#f8fafc;font-weight:800;cursor:pointer}
+.term.selected{background:#fef3c7;border-color:#f97316}
+.bucket.hit{background:#dcfce7;border-color:#22c55e}
+.flash-wrap{perspective:1200px}
+.flash-card{min-height:560px; position:relative; transform-style:preserve-3d; transition: transform .55s cubic-bezier(.2,.8,.2,1); cursor:pointer}
+.flash-card.flipped{transform:rotateY(180deg)}
+.face{position:absolute; inset:0; backface-visibility:hidden; border-radius:30px; padding:28px; display:flex; flex-direction:column; justify-content:space-between; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin}
+.front{background:linear-gradient(135deg,#0f172a,#1d4ed8,#06b6d4);color:white}
+.back{background:linear-gradient(135deg,#fff,#fef3c7,#dbeafe); transform:rotateY(180deg); color:#0f172a; border:2px solid rgba(250,204,21,.45)}
+.flash-card.study .face{outline:5px solid rgba(249,115,22,.55)}
+.flash-title{font-size:2rem;font-weight:1000;line-height:1.1;letter-spacing:-.03em}
+.flash-cat{align-self:flex-start;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.18);font-weight:900}
+.reveal-zone{padding:18px;border-radius:24px;background:rgba(255,255,255,.72); border:1px solid rgba(15,23,42,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.7); cursor:default}
+.answer-box{display:none;margin-top:12px;border-radius:20px;padding:16px;background:linear-gradient(135deg,#ecfeff,#fef9c3);border:1px solid #67e8f9;line-height:1.55;font-weight:750}
+.answer-box.show{display:block}
+.studybtn.active{background:linear-gradient(135deg,#f97316,#facc15)!important;color:#2c1600}
+.option{display:block;width:100%;text-align:left;margin:10px 0;border-radius:18px;padding:14px;color:#0f172a;background:linear-gradient(135deg,#e0f2fe,#f5f3ff);box-shadow:none;border:2px solid transparent}
+.option:hover{border-color:#38bdf8}
+.option.correct{background:linear-gradient(135deg,#bbf7d0,#99f6e4);border-color:#16a34a;box-shadow:0 0 0 4px rgba(250,204,21,.45),0 0 28px rgba(250,204,21,.45);animation:slowGlow 2.4s ease-in-out infinite}
+.option.wrong{background:linear-gradient(135deg,#fecaca,#fce7f3);border-color:#dc2626; animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.flash-check-options{display:grid;gap:10px;margin:12px 0}
+.flash-opt{display:block;width:100%;text-align:left;border:2px solid rgba(15,23,42,.12);border-radius:18px;padding:14px 16px;font-weight:900;color:#0f172a;background:linear-gradient(135deg,#e0f2fe,#f5f3ff);box-shadow:0 8px 18px rgba(15,23,42,.08);cursor:pointer;transition:.18s transform,.18s box-shadow,.18s border-color}
+.flash-opt:hover{transform:translateY(-2px);border-color:#38bdf8;box-shadow:0 14px 24px rgba(15,23,42,.13)}
+.flash-opt.correct{background:linear-gradient(135deg,#bbf7d0,#a7f3d0,#fef9c3);border-color:#16a34a;box-shadow:0 0 0 5px rgba(250,204,21,.45),0 0 30px rgba(250,204,21,.50);animation:slowGlow 2.4s ease-in-out infinite}
+.flash-opt.wrong{background:linear-gradient(135deg,#fecaca,#fee2e2);border-color:#dc2626;box-shadow:0 0 0 4px rgba(220,38,38,.18);animation:shake .3s}
+@keyframes slowGlow{0%,100%{filter:brightness(1);box-shadow:0 0 0 4px rgba(250,204,21,.35),0 0 18px rgba(250,204,21,.35)}50%{filter:brightness(1.04);box-shadow:0 0 0 7px rgba(250,204,21,.55),0 0 34px rgba(250,204,21,.58)}}
+.strategy{position:relative;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;margin-top:14px;border-radius:24px;padding:16px 18px;background:linear-gradient(135deg,#ecfeff,#fef9c3 45%,#dcfce7 72%,#fce7f3);border:1px solid rgba(34,197,94,.35);box-shadow:0 14px 35px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.8)}
+.strategy strong{color:#065f46;font-size:1.02rem}
+.teacher-icon{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#fde68a,#facc15);position:relative;box-shadow:0 8px 18px rgba(15,23,42,.18);border:3px solid #fff;flex:0 0 auto;overflow:hidden}
+.teacher-icon:before{content:"";position:absolute;left:15px;top:13px;width:28px;height:30px;border-radius:50%;background:#fee2c5;box-shadow:0 -9px 0 5px #f6c453}
+.teacher-icon:after{content:"📘";position:absolute;right:-2px;bottom:-3px;font-size:24px;transform:rotate(-10deg)}
+.glasses{position:absolute;left:12px;top:25px;width:34px;height:10px;border-top:4px solid #111827;border-radius:10px;z-index:2}.glasses:before,.glasses:after{content:"";position:absolute;top:-7px;width:12px;height:12px;border:3px solid #111827;border-radius:50%;background:rgba(255,255,255,.25)}.glasses:before{left:0}.glasses:after{right:0}
+.lesson-action{margin-top:16px;border-radius:24px;padding:18px;background:linear-gradient(135deg,#eef2ff,#ecfeff,#fff7ed);border:1px solid rgba(56,189,248,.25);box-shadow:0 12px 28px rgba(15,23,42,.08)}
+.lesson-action h3{margin:0 0 8px;font-size:1.25rem}.lesson-choice{border:2px solid rgba(15,23,42,.08);border-radius:16px;background:#fff;padding:12px 14px;margin:8px 0;font-weight:850;text-align:left;width:100%;cursor:pointer}.lesson-choice.correct{background:#dcfce7;border-color:#22c55e;box-shadow:0 0 0 4px rgba(250,204,21,.25)}.lesson-choice.wrong{background:#fee2e2;border-color:#ef4444;animation:shake .3s}
+.callout-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}.callout-tile{border-radius:18px;padding:14px;background:rgba(255,255,255,.72);border:1px solid rgba(15,23,42,.08);font-weight:800;box-shadow:0 8px 20px rgba(15,23,42,.07)}
+
+.feedback{display:none;margin-top:14px;border-radius:22px;padding:16px;background:#fff;border-left:8px solid #06b6d4;box-shadow:0 12px 30px rgba(15,23,42,.08)}
+.feedback.show{display:block}
+.q-map{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.dot{width:38px;height:38px;border-radius:999px;border:0;display:grid;place-items:center;color:#0f172a;background:#bfdbfe;font-weight:1000;box-shadow:0 8px 16px rgba(15,23,42,.08);padding:0}
+.dot.current{background:#1d4ed8;color:white} .dot.good{background:#22c55e;color:white} .dot.bad{background:#ef4444;color:white} .dot.study{background:#f97316;color:#2c1600} .dot.flagged:after{content:"⚑";font-size:.7rem;margin-left:1px}
+.timer{font-size:2.4rem;font-weight:1000;color:#0f172a;background:#fff;border-radius:22px;padding:10px 18px;display:inline-block}
+textarea,input{width:100%;border:2px solid #cbd5e1;border-radius:18px;padding:14px;font:inherit;background:white}
+textarea:focus,input:focus{outline:4px solid rgba(56,189,248,.25);border-color:#38bdf8}
+.summary-box{white-space:pre-wrap;background:#0f172a;color:#dbeafe;border-radius:22px;padding:18px;line-height:1.5;max-height:420px;overflow:auto}
+.hidden{display:none!important}
+.print-only{display:none}
+.footer{text-align:center;color:#64748b;margin-top:40px;font-weight:700}
+@media(max-width:760px){nav{grid-template-columns:repeat(2,1fr)}.activity-row{grid-template-columns:1fr}header{position:relative}}
+@media print{
+  header, nav, .no-print, button, .top-actions{display:none!important}
+  body{background:white;color:#111}
+  main{max-width:none;margin:0;padding:0}
+  .page{display:block!important;break-inside:auto}
+  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;background:white}
+  .print-only{display:block}
+  .face{position:relative;transform:none!important;min-height:auto;color:#111;background:white;border:1px solid #ddd}
+  .flash-card,.flash-card.flipped{transform:none!important;min-height:auto}
+  .back{transform:none!important;margin-top:12px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hero">
+    <div class="brand">
+      <span class="pill">Medicaid Mastery Lab · Chapter 15</span>
+      <h1>Medicaid, Claims, Eligibility & Payer Logic</h1>
+      <p>Interactive lessons, animated maps, flashcards, practice questions, a timed challenge, reflection, and a printable study report.</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn-green" onclick="buildSummary();window.print()">🖨️ Print / Save PDF</button>
+      <button class="btn-dark" id="soundBtn" onclick="toggleSound()">🔊 Sound On</button>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main>
+<section id="dashboard" class="page active">
+  <div class="grid">
+    <div class="card glow">
+      <h2 class="section-title">Mission</h2>
+      <p class="section-sub">Students learn Medicaid like billers: eligibility first, coverage category second, payer order third, claim correction last.</p>
+      <div class="flowline">
+        <div class="node">Patient says Medicaid</div><div class="arrow">→</div><div class="node">Verify eligibility</div><div class="arrow">→</div><div class="node">Check other payer</div><div class="arrow">→</div><div class="node">Bill correctly</div>
+      </div>
+      <button class="btn-purple" onclick="showPage('lessons')">Start lesson journey</button>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Your Progress</h2>
+      <div class="stat"><div class="bubble b1">📘</div><div><b>Lessons opened</b><div id="lessonProgress">0 / 6</div></div></div><br>
+      <div class="progressbar"><div id="lessonBar"></div></div><br>
+      <div class="stat"><div class="bubble b2">🃏</div><div><b>Flashcards studied</b><div id="flashProgress">0 / 18</div></div></div><br>
+      <div class="progressbar"><div id="flashBar"></div></div><br>
+      <div class="stat"><div class="bubble b3">⚑</div><div><b>Need to study</b><div id="studyCount">0 marked</div></div></div><br>
+      <div class="stat"><div class="bubble b4">🎯</div><div><b>Practice score</b><div id="practiceScore">Not started</div></div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h2 class="section-title">High-Yield Medicaid Map</h2>
+    <div class="compare high-yield-map">
+      <div class="mini"><h3>Eligibility</h3><p><span class="term-chip" tabindex="0" data-tip="Federal Poverty Level: an income guideline used to decide whether a patient may qualify for Medicaid or other assistance programs.">FPL</span> <span class="term-chip" tabindex="0" data-tip="Modified Adjusted Gross Income: the income method many Medicaid programs use to decide eligibility for children, pregnant patients, parents, and expansion adults.">MAGI</span> monthly income, valid card, and <span class="term-chip" tabindex="0" data-tip="Medicaid Eligibility Verification System: the office checks this to confirm whether the patient is active and what coverage rules apply today.">MEVS</span>.</p></div>
+      <div class="mini"><h3>Special Groups</h3><p><span class="term-chip" tabindex="0" data-tip="Qualified Medicare Beneficiary: a Medicare Savings Program that can help pay Medicare Part A/Part B premiums and may help with deductibles, coinsurance, and copays.">QMB</span> <span class="term-chip" tabindex="0" data-tip="Specified Low-Income Medicare Beneficiary: a Medicare Savings Program that helps pay the Medicare Part B premium.">SLMB</span> <span class="term-chip" tabindex="0" data-tip="Qualified Disabled and Working Individual: helps certain working disabled people pay the Medicare Part A premium.">QDWI</span> <span class="term-chip" tabindex="0" data-tip="Children’s Health Insurance Program: coverage for children in families whose income is too high for Medicaid but still need public insurance help.">CHIP</span> and unborn-child card.</p></div>
+      <div class="mini"><h3>Care Programs</h3><p><span class="term-chip" tabindex="0" data-tip="Early and Periodic Screening, Diagnostic, and Treatment: Medicaid’s child health benefit focused on screening, prevention, diagnosis, and needed treatment.">EPSDT</span> for children; <span class="term-chip" tabindex="0" data-tip="Program of All-Inclusive Care for the Elderly: coordinates medical and long-term care for older adults who meet nursing-facility-level care requirements but may live in the community.">PACE</span> for older adults needing nursing-facility-level care.</p></div>
+      <div class="mini"><h3>Claims</h3><p>Medicaid pays last, payment in full, adjusted vs. voided claims, and <span class="term-chip" tabindex="0" data-tip="Surveillance and Utilization Review System: Medicaid review system used to monitor billing patterns, utilization, possible overuse, and program integrity concerns.">SURS</span>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="lessons" class="page">
+  <h2 class="section-title">Interactive Lessons</h2>
+  <p class="section-sub">Each lesson teaches the concept with a different visual style, then checks understanding immediately.</p>
+  <div class="lesson-tabs" id="lessonTabs"></div>
+  <div class="card lesson-stage" id="lessonStage"></div>
+</section>
+
+<section id="flashcards" class="page">
+  <div class="grid">
+    <div class="card">
+      <h2 class="section-title">Color Flashcards</h2>
+      <p class="section-sub">Click anywhere on the card to flip. The Reveal button is protected, so clicking it will not accidentally flip the card.</p>
+      <div id="flashMount"></div>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Flashcard Map</h2>
+      <div class="q-map" id="flashMap"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Category</th><th>What to remember</th></tr></thead><tbody>
+        <tr><td>Eligibility</td><td>FPL, MAGI, monthly income, valid card</td></tr>
+        <tr><td>Medicare Savings</td><td>QMB = broader help, SLMB = Part B, QDWI = Part A working disabled</td></tr>
+        <tr><td>Claims</td><td>MEVS, last payer, payment in full, adjusted vs. voided</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="practice" class="page">
+  <h2 class="section-title">Guided Practice</h2>
+  <p class="section-sub">Students answer, review rationale for every option, and mark questions they need to study.</p>
+  <div class="card">
+    <div class="q-map" id="practiceMap"></div>
+    <div id="practiceMount"></div>
+  </div>
+</section>
+
+<section id="test" class="page">
+  <h2 class="section-title">Timed Challenge Test</h2>
+  <p class="section-sub">30 seconds per question. Students can flag questions and review them at the end.</p>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="timer" id="timer">30</div>
+      <div>
+        <button class="btn-orange" onclick="flagTestQuestion()">⚑ Need to study</button>
+        <button class="btn-purple" onclick="startTest()">Start / Restart Test</button>
+      </div>
+    </div>
+    <div class="q-map" id="testMap"></div>
+    <div id="testMount"><p class="section-sub">Click Start / Restart Test when ready.</p></div>
+  </div>
+</section>
+
+<section id="reflection" class="page">
+  <div class="grid">
+    <div class="card">
+      <h2 class="section-title">Reflection</h2>
+      <label><b>1. Which Medicaid idea confused you the most?</b></label>
+      <textarea id="ref1" rows="4" oninput="saveState()"></textarea><br><br>
+      <label><b>2. What clue helped you answer a question today?</b></label>
+      <textarea id="ref2" rows="4" oninput="saveState()"></textarea><br><br>
+      <label><b>3. What will you review before the test?</b></label>
+      <textarea id="ref3" rows="4" oninput="saveState()"></textarea><br><br>
+      <button class="btn-green" onclick="buildSummary()">Generate Student Summary</button>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Student Summary</h2>
+      <div class="summary-box" id="summaryBox">Generate your summary after completing practice and reflection.</div>
+    </div>
+  </div>
+</section>
+<div class="footer">Instructional design by Hilary Homaii · All rights reserved</div>
+</main>
+
+<script>
+const QUESTIONS = [{"id": "q1", "n": 1, "question": "In 1965, Congress passed Title 19 of the Social Security Act of 1965, establishing a federally mandated, __________ - administered medical assistance program for individuals with incomes below the federal poverty level.", "choices": [{"id": "I0_C0", "text": "federal"}, {"id": "I0_C1", "text": "county"}, {"id": "I0_C2", "text": "municipal"}, {"id": "I0_C3", "text": "state"}], "correctId": "I0_C3", "correctText": "state", "strategy": "See the structure: Medicaid is federal law, but states administer it. The key words are “Title 19” and “administered.”", "rationales": {"I0_C0": "Federal is tempting because Title XIX is federal law and federal money helps fund it, but the administration is not purely federal.", "I0_C1": "Counties may help with local enrollment or services in some places, but Medicaid is not county-administered as the program structure.", "I0_C2": "Municipal means city-level government. Medicaid is not administered as a city program.", "I0_C3": "Correct. Medicaid is a federally mandated program that is administered by each state, so coverage rules and names can vary by state."}}, {"id": "q2", "n": 2, "question": "The federal name for the Title 19 medical assistance program is __________.", "choices": [{"id": "I1_C0", "text": "CHAMPUS"}, {"id": "I1_C1", "text": "Medicaid"}, {"id": "I1_C2", "text": "Medicare"}, {"id": "I1_C3", "text": "TRICARE"}], "correctId": "I1_C1", "correctText": "Medicaid", "strategy": "Separate the program names. Title XIX = Medicaid. Medicare is Title XVIII.", "rationales": {"I1_C0": "CHAMPUS is an older military health program name, not Title XIX Medicaid.", "I1_C1": "Correct. Medicaid is the federal name for the Title XIX medical assistance program.", "I1_C2": "Medicare is a federal insurance program mainly for older adults and certain disabled individuals; it is not Title XIX Medicaid.", "I1_C3": "TRICARE is military health coverage for eligible service members, retirees, and families, not the Title XIX program."}}, {"id": "q3", "n": 3, "question": "Which describes annual income guidelines established by the federal government?", "choices": [{"id": "I2_C0", "text": "federal poverty level"}, {"id": "I2_C1", "text": "medically needy Medicaid program"}, {"id": "I2_C2", "text": "Supplemental Security Income"}, {"id": "I2_C3", "text": "Temporary Assistance for Needy Families"}], "correctId": "I2_C0", "correctText": "federal poverty level", "strategy": "The phrase “annual income guidelines” points to the poverty guideline, not to a coverage program.", "rationales": {"I2_C0": "Correct. The federal poverty level is an annual income guideline used in many eligibility decisions.", "I2_C1": "Medically needy is a Medicaid eligibility pathway for people with high medical expenses, not the annual guideline itself.", "I2_C2": "SSI is a federal cash benefit program for eligible aged, blind, or disabled people with limited income/resources; it is not the annual income guideline.", "I2_C3": "TANF is a family assistance program; it is not the annual federal poverty guideline."}}, {"id": "q4", "n": 4, "question": "Which is the current program that is the basis for determining Medicaid income eligibility for most children, pregnant people, parents, and adults?", "choices": [{"id": "I3_C0", "text": "Aid to Families with Dependent Children"}, {"id": "I3_C1", "text": "Federal Medical Assistance Percentage"}, {"id": "I3_C2", "text": "Modified Adjusted Gross Income (MAGI)"}, {"id": "I3_C3", "text": "Temporary Assistance for Needy Families"}], "correctId": "I3_C2", "correctText": "Modified Adjusted Gross Income (MAGI)", "strategy": "For most modern Medicaid eligibility groups, look for MAGI. It is income methodology, not an old welfare category.", "rationales": {"I3_C0": "AFDC was historically connected to welfare eligibility, but it is not the current main Medicaid income standard for these groups.", "I3_C1": "FMAP is the federal share of Medicaid funding paid to states; it does not calculate a patient’s eligibility.", "I3_C2": "Correct. MAGI is the basis for determining Medicaid income eligibility for many children, pregnant people, parents, and adults.", "I3_C3": "TANF replaced AFDC as a cash assistance program, but it is not the main income methodology named in this question."}}, {"id": "q5", "n": 5, "question": "Which is the special group that requires states to pay Medicare premiums, deductibles, and coinsurance amounts for individuals whose income is at or below 100 percent of the federal poverty level and whose resources are at or below twice the standard allowed under SSI?", "choices": [{"id": "I4_C0", "text": "qualified Medicare beneficiaries"}, {"id": "I4_C1", "text": "qualifying individuals"}, {"id": "I4_C2", "text": "qualified working disabled individuals"}, {"id": "I4_C3", "text": "specified low-income Medicare beneficiaries"}], "correctId": "I4_C0", "correctText": "qualified Medicare beneficiaries", "strategy": "QMB is the broadest Medicare Savings Program in this set: premiums plus deductibles and coinsurance. Think “Qualified Medicare Beneficiary = bigger help.”", "rationales": {"I4_C0": "Correct. QMB helps eligible Medicare beneficiaries with Medicare premiums, deductibles, and coinsurance.", "I4_C1": "QI generally helps with Part B premiums for a limited group; it is not the full premiums/deductibles/coinsurance category described here.", "I4_C2": "QDWI focuses on Part A premium help for certain disabled people who return to work and lose premium-free Part A.", "I4_C3": "SLMB helps pay Part B premiums for people above the QMB income range, not deductibles and coinsurance."}}, {"id": "q6", "n": 6, "question": "Which is the special group that requires states to pay Medicare Part A premiums for certain disabled individuals who lose Medicare coverage because of work?", "choices": [{"id": "I5_C0", "text": "qualified Medicare beneficiaries"}, {"id": "I5_C1", "text": "qualifying individuals"}, {"id": "I5_C2", "text": "qualified working disabled individuals"}, {"id": "I5_C3", "text": "specified low-income Medicare beneficiaries"}], "correctId": "I5_C2", "correctText": "qualified working disabled individuals", "strategy": "The clue is “disabled,” “work,” and “Part A premiums.” That combination is QDWI.", "rationales": {"I5_C0": "QMB is broader cost-sharing help, not specifically the work-related disabled Part A premium category.", "I5_C1": "QI helps with Part B premium assistance, not this Part A work-disability situation.", "I5_C2": "Correct. QDWI helps certain working disabled individuals pay Medicare Part A premiums after losing Medicare coverage because of work.", "I5_C3": "SLMB also relates to Part B premiums, not Part A premiums for working disabled individuals."}}, {"id": "q7", "n": 7, "question": "Which is the special group that requires states to pay Medicare Part B premiums for individuals with incomes between 100 and 120 percent of the federal poverty level?", "choices": [{"id": "I6_C0", "text": "qualified Medicare beneficiaries"}, {"id": "I6_C1", "text": "qualifying individuals"}, {"id": "I6_C2", "text": "qualified working disabled individuals"}, {"id": "I6_C3", "text": "specified low-income Medicare beneficiaries"}], "correctId": "I6_C3", "correctText": "specified low-income Medicare beneficiaries", "strategy": "The clue is income between 100% and 120% of FPL plus Part B premium. That is SLMB.", "rationales": {"I6_C0": "QMB is for lower income and includes more help than only Part B premiums.", "I6_C1": "QI is also Part B premium help, but the question’s 100% to 120% FPL clue points to SLMB.", "I6_C2": "QDWI is about Part A premium help for certain disabled working individuals.", "I6_C3": "Correct. SLMB helps pay Medicare Part B premiums for people in the specified low-income range."}}, {"id": "q8", "n": 8, "question": "The Children’s Health Insurance Program (CHIP) was implemented in accordance with the Balanced Budget Act (BBA) to allow states to create or expand existing insurance programs, providing more federal funds to states for the purpose of expanding __________ eligibility to include a greater number of currently uninsured children.", "choices": [{"id": "I7_C0", "text": "commercial insurance"}, {"id": "I7_C1", "text": "group health insurance"}, {"id": "I7_C2", "text": "Medicaid"}, {"id": "I7_C3", "text": "Medicare"}], "correctId": "I7_C2", "correctText": "Medicaid", "strategy": "CHIP was created to expand coverage for uninsured children, often by expanding Medicaid or using Medicaid-like state programs.", "rationales": {"I7_C0": "Commercial insurance is private insurance, not the public eligibility expansion named here.", "I7_C1": "Group insurance usually comes through an employer or organization; CHIP is not an employer group plan.", "I7_C2": "Correct. CHIP allowed states to expand or create programs to cover more uninsured children through Medicaid-related eligibility.", "I7_C3": "Medicare is not the children’s coverage expansion program in this question."}}, {"id": "q9", "n": 9, "question": "Programs of All-inclusive Care for the Elderly (PACE) use a capitated payment system to provide a comprehensive package of community-based services as an alternative to institutional care for persons aged 55 or older who require a(n) __________ level of care.", "choices": [{"id": "I8_C0", "text": "acute inpatient"}, {"id": "I8_C1", "text": "nursing facility"}, {"id": "I8_C2", "text": "outpatient basis"}, {"id": "I8_C3", "text": "subacute hospital"}], "correctId": "I8_C1", "correctText": "nursing facility", "strategy": "PACE is for people 55+ who need nursing-facility-level care but can often stay in the community with comprehensive services.", "rationales": {"I8_C0": "Acute inpatient care means hospital-level treatment for an acute condition, not the long-term level of care used for PACE eligibility.", "I8_C1": "Correct. PACE is an alternative to institutional care for older adults who require a nursing facility level of care.", "I8_C2": "PACE services may be community-based, but the eligibility level is not merely ordinary outpatient care.", "I8_C3": "Subacute hospital care is not the level named for PACE eligibility in this question."}}, {"id": "q10", "n": 10, "question": "The Medicare Catastrophic Coverage Act of 1988 implemented Spousal Impoverishment Protection Legislation in 1989 to prevent married couples from being required to spend down income and other liquid assets (cash and property) before one of the partners could be declared eligible for Medicaid coverage for nursing facility care. The spouse residing at home is called the __________ spouse.", "choices": [{"id": "I9_C0", "text": "community"}, {"id": "I9_C1", "text": "eligible"}, {"id": "I9_C2", "text": "partner"}, {"id": "I9_C3", "text": "surviving"}], "correctId": "I9_C0", "correctText": "community", "strategy": "When one spouse stays at home and the other needs nursing facility Medicaid, the at-home spouse is the community spouse.", "rationales": {"I9_C0": "Correct. The spouse who remains at home is called the community spouse.", "I9_C1": "Eligible describes someone who qualifies for benefits, but it is not the special term for the spouse at home.", "I9_C2": "Partner is everyday language, not the Medicaid spousal impoverishment term.", "I9_C3": "Surviving spouse refers to a spouse after the other spouse dies; that is not the situation described."}}, {"id": "q11", "n": 11, "question": "Any time patients state that they receive Medicaid, they must present a valid Medicaid identification card because eligibility, in many cases, will depend on the patient’s __________ income.", "choices": [{"id": "I10_C0", "text": "daily"}, {"id": "I10_C1", "text": "monthly"}, {"id": "I10_C2", "text": "weekly"}, {"id": "I10_C3", "text": "yearly"}], "correctId": "I10_C1", "correctText": "monthly", "strategy": "Medicaid eligibility can change often. The word “current card” matters because eligibility may depend on monthly income.", "rationales": {"I10_C0": "Daily income is too narrow and is not the usual eligibility period in this context.", "I10_C1": "Correct. Medicaid eligibility often depends on the patient’s monthly income, so the valid card and verification matter.", "I10_C2": "Weekly income may be part of earnings, but the Medicaid eligibility language here points to monthly income.", "I10_C3": "Annual income matters in some guidelines, but this question is about presenting a valid Medicaid card because eligibility may depend on monthly income."}}, {"id": "q12", "n": 12, "question": "Which consists of routine pediatric checkups provided to all children enrolled in Medicaid, including dental, hearing, vision, and other screening services to detect potential problems?", "choices": [{"id": "I11_C0", "text": "early and periodic screening, diagnostic, and treatment"}, {"id": "I11_C1", "text": "health care immunization and vaccination program"}, {"id": "I11_C2", "text": "preventive and maintenance care and screening"}, {"id": "I11_C3", "text": "well baby and well child encounters at provider offices"}], "correctId": "I11_C0", "correctText": "early and periodic screening, diagnostic, and treatment", "strategy": "For children on Medicaid, remember EPSDT: screening, diagnosis, treatment, and follow-up—not just a routine office visit.", "rationales": {"I11_C0": "Correct. EPSDT provides routine pediatric checkups plus dental, hearing, vision, and other screening services for children enrolled in Medicaid.", "I11_C1": "Immunizations may be included in pediatric care, but this option is too narrow and does not include diagnosis and treatment.", "I11_C2": "This sounds general, but EPSDT is the specific Medicaid program name.", "I11_C3": "Well-child visits are part of the idea, but the official Medicaid benefit is EPSDT."}}, {"id": "q13", "n": 13, "question": "The portion of the Medicaid program paid by the federal government is called the Federal Medical Assistance Percentage (FMAP) and is determined annually for each state using a formula that compares __________ average per capita income level with the national average.", "choices": [{"id": "I12_C0", "text": "patient"}, {"id": "I12_C1", "text": "payer"}, {"id": "I12_C2", "text": "provider"}, {"id": "I12_C3", "text": "state"}], "correctId": "I12_C3", "correctText": "state", "strategy": "FMAP is about the state’s income compared with the national average. Do not confuse funding formula with patient income.", "rationales": {"I12_C0": "Patient income may affect eligibility, but FMAP is not calculated from a single patient’s income.", "I12_C1": "Payer refers to the insurance or program paying a claim; FMAP is a federal-state funding formula.", "I12_C2": "Provider income is not used to set the state’s federal Medicaid matching rate.", "I12_C3": "Correct. FMAP is determined using a formula comparing the state’s average per capita income with the national average."}}, {"id": "q14", "n": 14, "question": "When the patient is covered by other medical or liability policies, Medicaid reimburses providers __________.", "choices": [{"id": "I13_C0", "text": "first"}, {"id": "I13_C1", "text": "last"}], "correctId": "I13_C1", "correctText": "last", "strategy": "Medicaid is the payer of last resort. Look for “other medical or liability policies.”", "rationales": {"I13_C0": "Medicaid does not pay first when another medical or liability payer should cover the service.", "I13_C1": "Correct. If another payer is responsible, Medicaid pays last."}}, {"id": "q15", "n": 15, "question": "Any provider who accepts a Medicaid patient must accept the Medicaid-determined payment as __________.", "choices": [{"id": "I14_C0", "text": "partial payment"}, {"id": "I14_C1", "text": "payment in full"}], "correctId": "I14_C1", "correctText": "payment in full", "strategy": "When a provider accepts Medicaid, they accept the Medicaid rate. Students must not think the patient can simply be billed the rest.", "rationales": {"I14_C0": "Partial payment would imply the provider can bill the patient for the balance, which is generally not the Medicaid rule when accepting the patient.", "I14_C1": "Correct. The provider accepts the Medicaid-determined payment as payment in full."}}, {"id": "q16", "n": 16, "question": "Which allows providers to electronically access the state’s eligibility file to verify Medicaid eligibility?", "choices": [{"id": "I15_C0", "text": "CMS"}, {"id": "I15_C1", "text": "DEEDS"}, {"id": "I15_C2", "text": "DMV"}, {"id": "I15_C3", "text": "MEVS"}], "correctId": "I15_C3", "correctText": "MEVS", "strategy": "MEVS sounds like Medicaid Eligibility Verification System. The clue is electronic access to eligibility.", "rationales": {"I15_C0": "CMS oversees federal health programs but is not the specific eligibility file access system named here.", "I15_C1": "DEEDS is not the Medicaid eligibility verification system in this context.", "I15_C2": "DMV handles motor vehicle services, not Medicaid eligibility verification.", "I15_C3": "Correct. MEVS allows electronic access to the state eligibility file to verify Medicaid eligibility."}}, {"id": "q17", "n": 17, "question": "A(n) __________ claim has a payment correction, resulting in additional payment(s) to the provider.", "choices": [{"id": "I16_C0", "text": "adjusted"}, {"id": "I16_C1", "text": "appealed"}, {"id": "I16_C2", "text": "filed"}, {"id": "I16_C3", "text": "voided"}], "correctId": "I16_C0", "correctText": "adjusted", "strategy": "Additional payment after a correction = adjusted claim. Think “adjusted = changed/corrected.”", "rationales": {"I16_C0": "Correct. An adjusted claim has a payment correction that can result in additional payment to the provider.", "I16_C1": "An appeal challenges a denial or decision; it is not the name for a payment correction that adds payment.", "I16_C2": "Filed only means submitted; it does not mean corrected with extra payment.", "I16_C3": "Voided means Medicaid should not have paid the claim and payment is taken back."}}, {"id": "q18", "n": 18, "question": "A(n) __________ claim is one that Medicaid should not have originally paid, and results in a deduction from the lump-sum payment made to the provider.", "choices": [{"id": "I17_C0", "text": "adjusted"}, {"id": "I17_C1", "text": "appealed"}, {"id": "I17_C2", "text": "filed"}, {"id": "I17_C3", "text": "voided"}], "correctId": "I17_C3", "correctText": "voided", "strategy": "If Medicaid should not have paid the claim in the first place, the claim is voided. Voided means take it back.", "rationales": {"I17_C0": "Adjusted claims correct payment; they may add payment or correct details, but this question says it should not have been paid at all.", "I17_C1": "Appealed means the provider is challenging a decision; it is not the take-back category.", "I17_C2": "Filed just means submitted; it does not describe a claim that Medicaid should not have paid.", "I17_C3": "Correct. A voided claim should not have been paid and results in a deduction from the provider’s lump-sum payment."}}, {"id": "q19", "n": 19, "question": "Federal regulations require Medicaid to establish and maintain a(n) __________ program, which safeguards against unnecessary or inappropriate use of Medicaid services or excess payments and assesses the quality of those services.", "choices": [{"id": "I18_C0", "text": "early and periodic screening, diagnostic, and treatment"}, {"id": "I18_C1", "text": "eligibility verification"}, {"id": "I18_C2", "text": "recipient eligibility verification"}, {"id": "I18_C3", "text": "surveillance and utilization review"}], "correctId": "I18_C3", "correctText": "surveillance and utilization review", "strategy": "The words “unnecessary,” “inappropriate use,” “excess payments,” and “quality” point to surveillance and utilization review.", "rationales": {"I18_C0": "EPSDT is the child screening and treatment benefit, not the program integrity review system.", "I18_C1": "Eligibility verification checks whether the patient is covered; it does not review utilization, overpayment, and quality.", "I18_C2": "Recipient eligibility verification focuses on coverage status, not broad surveillance and utilization review.", "I18_C3": "Correct. SURS protects against unnecessary or inappropriate use, excess payments, and reviews quality of services."}}, {"id": "q20", "n": 20, "question": "A Medicaid card issued for the “Unborn child of ...,” includes the __________ on the card.", "choices": [{"id": "I19_C0", "text": "birth father’s last name"}, {"id": "I19_C1", "text": "given name of the child"}, {"id": "I19_C2", "text": "name as BABY BOY or GIRL"}, {"id": "I19_C3", "text": "pregnant woman’s name"}], "correctId": "I19_C3", "correctText": "pregnant woman’s name", "strategy": "For “Unborn child of…” the card identifies the pregnant woman, not a baby name that does not exist yet.", "rationales": {"I19_C0": "The birth father’s last name is not the identifying name used for this Medicaid card format.", "I19_C1": "The child has not been born/named yet in this card format.", "I19_C2": "That is not the card wording described by “Unborn child of…” in this question.", "I19_C3": "Correct. The card for “Unborn child of…” includes the pregnant woman’s name."}}];
+const EXTRA = [{"id": "e1", "n": "C1", "question": "A patient has Medicare and Medicaid. The office sees that a third-party liability policy may cover the injury. What should the billing specialist remember first?", "choices": [{"id": "a", "text": "Medicaid is usually payer of last resort when another payer is responsible."}, {"id": "b", "text": "Medicaid always pays first because it is a public program."}, {"id": "c", "text": "The patient should automatically be billed for the full charge."}, {"id": "d", "text": "The provider should void the claim before checking other coverage."}], "correctId": "a", "correctText": "Medicaid is usually payer of last resort when another payer is responsible.", "strategy": "When you see another medical or liability payer, think payer order before payment.", "rationales": {"a": "Correct. Medicaid generally reimburses last when another payer is responsible.", "b": "No. Public program does not mean first payer. Other responsible payers must be considered.", "c": "No. Medicaid rules protect patients from improper balance billing when providers accept Medicaid.", "d": "No. Voiding is used when a paid claim should not have been paid, not before payer order is reviewed."}}, {"id": "e2", "n": "C2", "question": "A child enrolled in Medicaid is due for routine screening, dental, hearing, and vision services. Which Medicaid benefit is being tested?", "choices": [{"id": "a", "text": "EPSDT"}, {"id": "b", "text": "QMB"}, {"id": "c", "text": "QDWI"}, {"id": "d", "text": "FMAP"}], "correctId": "a", "correctText": "EPSDT", "strategy": "Child + screening + diagnostic/treatment follow-up = EPSDT.", "rationales": {"a": "Correct. EPSDT is the Medicaid child screening, diagnostic, and treatment benefit.", "b": "QMB is Medicare cost-sharing help, not pediatric screening.", "c": "QDWI is Part A premium help for certain disabled working individuals.", "d": "FMAP is the federal share of Medicaid funding to a state."}}, {"id": "e3", "n": "C3", "question": "A provider receives additional payment after Medicaid corrects a previously processed claim. Which term best fits?", "choices": [{"id": "a", "text": "Adjusted claim"}, {"id": "b", "text": "Voided claim"}, {"id": "c", "text": "MAGI"}, {"id": "d", "text": "CHIP"}], "correctId": "a", "correctText": "Adjusted claim", "strategy": "Additional payment after correction means adjusted, not voided.", "rationales": {"a": "Correct. Adjusted claims involve payment corrections and may result in additional payment.", "b": "Voided means Medicaid should not have paid and money is deducted back.", "c": "MAGI is income methodology, not claim correction.", "d": "CHIP expands coverage for uninsured children, not claim payment correction."}}, {"id": "e4", "n": "C4", "question": "Which question best helps a student separate SLMB from QDWI?", "choices": [{"id": "a", "text": "Is the clue Part B premiums, or Part A premiums for a disabled working individual?"}, {"id": "b", "text": "Is the patient receiving pediatric dental screening?"}, {"id": "c", "text": "Is the provider accepting payment in full?"}, {"id": "d", "text": "Is Medicaid paying after a liability payer?"}], "correctId": "a", "correctText": "Is the clue Part B premiums, or Part A premiums for a disabled working individual?", "strategy": "For these look-alike acronyms, do not memorize letters only. Attach each acronym to the exact cost it helps pay.", "rationales": {"a": "Correct. SLMB connects to Part B premiums; QDWI connects to Part A premiums for certain disabled working individuals.", "b": "That clue points to EPSDT, not Medicare Savings Program categories.", "c": "That is a provider payment rule, not SLMB versus QDWI.", "d": "That is payer-of-last-resort logic, not Medicare Savings Program identification."}}, {"id": "e5", "n": "C5", "question": "A state’s federal Medicaid match is calculated by comparing the state’s average per capita income with the national average. Which term is being described?", "choices": [{"id": "a", "text": "FMAP"}, {"id": "b", "text": "MEVS"}, {"id": "c", "text": "PACE"}, {"id": "d", "text": "SURS"}], "correctId": "a", "correctText": "FMAP", "strategy": "Funding formula + state income comparison = FMAP.", "rationales": {"a": "Correct. FMAP is the federal medical assistance percentage paid to the state.", "b": "MEVS verifies eligibility electronically; it is not a funding formula.", "c": "PACE is community-based care for older adults who need nursing-facility-level care.", "d": "SURS is surveillance/utilization review for program integrity."}}];
+const ALLQ = [{"id": "q1", "n": 1, "question": "In 1965, Congress passed Title 19 of the Social Security Act of 1965, establishing a federally mandated, __________ - administered medical assistance program for individuals with incomes below the federal poverty level.", "choices": [{"id": "I0_C0", "text": "federal"}, {"id": "I0_C1", "text": "county"}, {"id": "I0_C2", "text": "municipal"}, {"id": "I0_C3", "text": "state"}], "correctId": "I0_C3", "correctText": "state", "strategy": "See the structure: Medicaid is federal law, but states administer it. The key words are “Title 19” and “administered.”", "rationales": {"I0_C0": "Federal is tempting because Title XIX is federal law and federal money helps fund it, but the administration is not purely federal.", "I0_C1": "Counties may help with local enrollment or services in some places, but Medicaid is not county-administered as the program structure.", "I0_C2": "Municipal means city-level government. Medicaid is not administered as a city program.", "I0_C3": "Correct. Medicaid is a federally mandated program that is administered by each state, so coverage rules and names can vary by state."}}, {"id": "q2", "n": 2, "question": "The federal name for the Title 19 medical assistance program is __________.", "choices": [{"id": "I1_C0", "text": "CHAMPUS"}, {"id": "I1_C1", "text": "Medicaid"}, {"id": "I1_C2", "text": "Medicare"}, {"id": "I1_C3", "text": "TRICARE"}], "correctId": "I1_C1", "correctText": "Medicaid", "strategy": "Separate the program names. Title XIX = Medicaid. Medicare is Title XVIII.", "rationales": {"I1_C0": "CHAMPUS is an older military health program name, not Title XIX Medicaid.", "I1_C1": "Correct. Medicaid is the federal name for the Title XIX medical assistance program.", "I1_C2": "Medicare is a federal insurance program mainly for older adults and certain disabled individuals; it is not Title XIX Medicaid.", "I1_C3": "TRICARE is military health coverage for eligible service members, retirees, and families, not the Title XIX program."}}, {"id": "q3", "n": 3, "question": "Which describes annual income guidelines established by the federal government?", "choices": [{"id": "I2_C0", "text": "federal poverty level"}, {"id": "I2_C1", "text": "medically needy Medicaid program"}, {"id": "I2_C2", "text": "Supplemental Security Income"}, {"id": "I2_C3", "text": "Temporary Assistance for Needy Families"}], "correctId": "I2_C0", "correctText": "federal poverty level", "strategy": "The phrase “annual income guidelines” points to the poverty guideline, not to a coverage program.", "rationales": {"I2_C0": "Correct. The federal poverty level is an annual income guideline used in many eligibility decisions.", "I2_C1": "Medically needy is a Medicaid eligibility pathway for people with high medical expenses, not the annual guideline itself.", "I2_C2": "SSI is a federal cash benefit program for eligible aged, blind, or disabled people with limited income/resources; it is not the annual income guideline.", "I2_C3": "TANF is a family assistance program; it is not the annual federal poverty guideline."}}, {"id": "q4", "n": 4, "question": "Which is the current program that is the basis for determining Medicaid income eligibility for most children, pregnant people, parents, and adults?", "choices": [{"id": "I3_C0", "text": "Aid to Families with Dependent Children"}, {"id": "I3_C1", "text": "Federal Medical Assistance Percentage"}, {"id": "I3_C2", "text": "Modified Adjusted Gross Income (MAGI)"}, {"id": "I3_C3", "text": "Temporary Assistance for Needy Families"}], "correctId": "I3_C2", "correctText": "Modified Adjusted Gross Income (MAGI)", "strategy": "For most modern Medicaid eligibility groups, look for MAGI. It is income methodology, not an old welfare category.", "rationales": {"I3_C0": "AFDC was historically connected to welfare eligibility, but it is not the current main Medicaid income standard for these groups.", "I3_C1": "FMAP is the federal share of Medicaid funding paid to states; it does not calculate a patient’s eligibility.", "I3_C2": "Correct. MAGI is the basis for determining Medicaid income eligibility for many children, pregnant people, parents, and adults.", "I3_C3": "TANF replaced AFDC as a cash assistance program, but it is not the main income methodology named in this question."}}, {"id": "q5", "n": 5, "question": "Which is the special group that requires states to pay Medicare premiums, deductibles, and coinsurance amounts for individuals whose income is at or below 100 percent of the federal poverty level and whose resources are at or below twice the standard allowed under SSI?", "choices": [{"id": "I4_C0", "text": "qualified Medicare beneficiaries"}, {"id": "I4_C1", "text": "qualifying individuals"}, {"id": "I4_C2", "text": "qualified working disabled individuals"}, {"id": "I4_C3", "text": "specified low-income Medicare beneficiaries"}], "correctId": "I4_C0", "correctText": "qualified Medicare beneficiaries", "strategy": "QMB is the broadest Medicare Savings Program in this set: premiums plus deductibles and coinsurance. Think “Qualified Medicare Beneficiary = bigger help.”", "rationales": {"I4_C0": "Correct. QMB helps eligible Medicare beneficiaries with Medicare premiums, deductibles, and coinsurance.", "I4_C1": "QI generally helps with Part B premiums for a limited group; it is not the full premiums/deductibles/coinsurance category described here.", "I4_C2": "QDWI focuses on Part A premium help for certain disabled people who return to work and lose premium-free Part A.", "I4_C3": "SLMB helps pay Part B premiums for people above the QMB income range, not deductibles and coinsurance."}}, {"id": "q6", "n": 6, "question": "Which is the special group that requires states to pay Medicare Part A premiums for certain disabled individuals who lose Medicare coverage because of work?", "choices": [{"id": "I5_C0", "text": "qualified Medicare beneficiaries"}, {"id": "I5_C1", "text": "qualifying individuals"}, {"id": "I5_C2", "text": "qualified working disabled individuals"}, {"id": "I5_C3", "text": "specified low-income Medicare beneficiaries"}], "correctId": "I5_C2", "correctText": "qualified working disabled individuals", "strategy": "The clue is “disabled,” “work,” and “Part A premiums.” That combination is QDWI.", "rationales": {"I5_C0": "QMB is broader cost-sharing help, not specifically the work-related disabled Part A premium category.", "I5_C1": "QI helps with Part B premium assistance, not this Part A work-disability situation.", "I5_C2": "Correct. QDWI helps certain working disabled individuals pay Medicare Part A premiums after losing Medicare coverage because of work.", "I5_C3": "SLMB also relates to Part B premiums, not Part A premiums for working disabled individuals."}}, {"id": "q7", "n": 7, "question": "Which is the special group that requires states to pay Medicare Part B premiums for individuals with incomes between 100 and 120 percent of the federal poverty level?", "choices": [{"id": "I6_C0", "text": "qualified Medicare beneficiaries"}, {"id": "I6_C1", "text": "qualifying individuals"}, {"id": "I6_C2", "text": "qualified working disabled individuals"}, {"id": "I6_C3", "text": "specified low-income Medicare beneficiaries"}], "correctId": "I6_C3", "correctText": "specified low-income Medicare beneficiaries", "strategy": "The clue is income between 100% and 120% of FPL plus Part B premium. That is SLMB.", "rationales": {"I6_C0": "QMB is for lower income and includes more help than only Part B premiums.", "I6_C1": "QI is also Part B premium help, but the question’s 100% to 120% FPL clue points to SLMB.", "I6_C2": "QDWI is about Part A premium help for certain disabled working individuals.", "I6_C3": "Correct. SLMB helps pay Medicare Part B premiums for people in the specified low-income range."}}, {"id": "q8", "n": 8, "question": "The Children’s Health Insurance Program (CHIP) was implemented in accordance with the Balanced Budget Act (BBA) to allow states to create or expand existing insurance programs, providing more federal funds to states for the purpose of expanding __________ eligibility to include a greater number of currently uninsured children.", "choices": [{"id": "I7_C0", "text": "commercial insurance"}, {"id": "I7_C1", "text": "group health insurance"}, {"id": "I7_C2", "text": "Medicaid"}, {"id": "I7_C3", "text": "Medicare"}], "correctId": "I7_C2", "correctText": "Medicaid", "strategy": "CHIP was created to expand coverage for uninsured children, often by expanding Medicaid or using Medicaid-like state programs.", "rationales": {"I7_C0": "Commercial insurance is private insurance, not the public eligibility expansion named here.", "I7_C1": "Group insurance usually comes through an employer or organization; CHIP is not an employer group plan.", "I7_C2": "Correct. CHIP allowed states to expand or create programs to cover more uninsured children through Medicaid-related eligibility.", "I7_C3": "Medicare is not the children’s coverage expansion program in this question."}}, {"id": "q9", "n": 9, "question": "Programs of All-inclusive Care for the Elderly (PACE) use a capitated payment system to provide a comprehensive package of community-based services as an alternative to institutional care for persons aged 55 or older who require a(n) __________ level of care.", "choices": [{"id": "I8_C0", "text": "acute inpatient"}, {"id": "I8_C1", "text": "nursing facility"}, {"id": "I8_C2", "text": "outpatient basis"}, {"id": "I8_C3", "text": "subacute hospital"}], "correctId": "I8_C1", "correctText": "nursing facility", "strategy": "PACE is for people 55+ who need nursing-facility-level care but can often stay in the community with comprehensive services.", "rationales": {"I8_C0": "Acute inpatient care means hospital-level treatment for an acute condition, not the long-term level of care used for PACE eligibility.", "I8_C1": "Correct. PACE is an alternative to institutional care for older adults who require a nursing facility level of care.", "I8_C2": "PACE services may be community-based, but the eligibility level is not merely ordinary outpatient care.", "I8_C3": "Subacute hospital care is not the level named for PACE eligibility in this question."}}, {"id": "q10", "n": 10, "question": "The Medicare Catastrophic Coverage Act of 1988 implemented Spousal Impoverishment Protection Legislation in 1989 to prevent married couples from being required to spend down income and other liquid assets (cash and property) before one of the partners could be declared eligible for Medicaid coverage for nursing facility care. The spouse residing at home is called the __________ spouse.", "choices": [{"id": "I9_C0", "text": "community"}, {"id": "I9_C1", "text": "eligible"}, {"id": "I9_C2", "text": "partner"}, {"id": "I9_C3", "text": "surviving"}], "correctId": "I9_C0", "correctText": "community", "strategy": "When one spouse stays at home and the other needs nursing facility Medicaid, the at-home spouse is the community spouse.", "rationales": {"I9_C0": "Correct. The spouse who remains at home is called the community spouse.", "I9_C1": "Eligible describes someone who qualifies for benefits, but it is not the special term for the spouse at home.", "I9_C2": "Partner is everyday language, not the Medicaid spousal impoverishment term.", "I9_C3": "Surviving spouse refers to a spouse after the other spouse dies; that is not the situation described."}}, {"id": "q11", "n": 11, "question": "Any time patients state that they receive Medicaid, they must present a valid Medicaid identification card because eligibility, in many cases, will depend on the patient’s __________ income.", "choices": [{"id": "I10_C0", "text": "daily"}, {"id": "I10_C1", "text": "monthly"}, {"id": "I10_C2", "text": "weekly"}, {"id": "I10_C3", "text": "yearly"}], "correctId": "I10_C1", "correctText": "monthly", "strategy": "Medicaid eligibility can change often. The word “current card” matters because eligibility may depend on monthly income.", "rationales": {"I10_C0": "Daily income is too narrow and is not the usual eligibility period in this context.", "I10_C1": "Correct. Medicaid eligibility often depends on the patient’s monthly income, so the valid card and verification matter.", "I10_C2": "Weekly income may be part of earnings, but the Medicaid eligibility language here points to monthly income.", "I10_C3": "Annual income matters in some guidelines, but this question is about presenting a valid Medicaid card because eligibility may depend on monthly income."}}, {"id": "q12", "n": 12, "question": "Which consists of routine pediatric checkups provided to all children enrolled in Medicaid, including dental, hearing, vision, and other screening services to detect potential problems?", "choices": [{"id": "I11_C0", "text": "early and periodic screening, diagnostic, and treatment"}, {"id": "I11_C1", "text": "health care immunization and vaccination program"}, {"id": "I11_C2", "text": "preventive and maintenance care and screening"}, {"id": "I11_C3", "text": "well baby and well child encounters at provider offices"}], "correctId": "I11_C0", "correctText": "early and periodic screening, diagnostic, and treatment", "strategy": "For children on Medicaid, remember EPSDT: screening, diagnosis, treatment, and follow-up—not just a routine office visit.", "rationales": {"I11_C0": "Correct. EPSDT provides routine pediatric checkups plus dental, hearing, vision, and other screening services for children enrolled in Medicaid.", "I11_C1": "Immunizations may be included in pediatric care, but this option is too narrow and does not include diagnosis and treatment.", "I11_C2": "This sounds general, but EPSDT is the specific Medicaid program name.", "I11_C3": "Well-child visits are part of the idea, but the official Medicaid benefit is EPSDT."}}, {"id": "q13", "n": 13, "question": "The portion of the Medicaid program paid by the federal government is called the Federal Medical Assistance Percentage (FMAP) and is determined annually for each state using a formula that compares __________ average per capita income level with the national average.", "choices": [{"id": "I12_C0", "text": "patient"}, {"id": "I12_C1", "text": "payer"}, {"id": "I12_C2", "text": "provider"}, {"id": "I12_C3", "text": "state"}], "correctId": "I12_C3", "correctText": "state", "strategy": "FMAP is about the state’s income compared with the national average. Do not confuse funding formula with patient income.", "rationales": {"I12_C0": "Patient income may affect eligibility, but FMAP is not calculated from a single patient’s income.", "I12_C1": "Payer refers to the insurance or program paying a claim; FMAP is a federal-state funding formula.", "I12_C2": "Provider income is not used to set the state’s federal Medicaid matching rate.", "I12_C3": "Correct. FMAP is determined using a formula comparing the state’s average per capita income with the national average."}}, {"id": "q14", "n": 14, "question": "When the patient is covered by other medical or liability policies, Medicaid reimburses providers __________.", "choices": [{"id": "I13_C0", "text": "first"}, {"id": "I13_C1", "text": "last"}], "correctId": "I13_C1", "correctText": "last", "strategy": "Medicaid is the payer of last resort. Look for “other medical or liability policies.”", "rationales": {"I13_C0": "Medicaid does not pay first when another medical or liability payer should cover the service.", "I13_C1": "Correct. If another payer is responsible, Medicaid pays last."}}, {"id": "q15", "n": 15, "question": "Any provider who accepts a Medicaid patient must accept the Medicaid-determined payment as __________.", "choices": [{"id": "I14_C0", "text": "partial payment"}, {"id": "I14_C1", "text": "payment in full"}], "correctId": "I14_C1", "correctText": "payment in full", "strategy": "When a provider accepts Medicaid, they accept the Medicaid rate. Students must not think the patient can simply be billed the rest.", "rationales": {"I14_C0": "Partial payment would imply the provider can bill the patient for the balance, which is generally not the Medicaid rule when accepting the patient.", "I14_C1": "Correct. The provider accepts the Medicaid-determined payment as payment in full."}}, {"id": "q16", "n": 16, "question": "Which allows providers to electronically access the state’s eligibility file to verify Medicaid eligibility?", "choices": [{"id": "I15_C0", "text": "CMS"}, {"id": "I15_C1", "text": "DEEDS"}, {"id": "I15_C2", "text": "DMV"}, {"id": "I15_C3", "text": "MEVS"}], "correctId": "I15_C3", "correctText": "MEVS", "strategy": "MEVS sounds like Medicaid Eligibility Verification System. The clue is electronic access to eligibility.", "rationales": {"I15_C0": "CMS oversees federal health programs but is not the specific eligibility file access system named here.", "I15_C1": "DEEDS is not the Medicaid eligibility verification system in this context.", "I15_C2": "DMV handles motor vehicle services, not Medicaid eligibility verification.", "I15_C3": "Correct. MEVS allows electronic access to the state eligibility file to verify Medicaid eligibility."}}, {"id": "q17", "n": 17, "question": "A(n) __________ claim has a payment correction, resulting in additional payment(s) to the provider.", "choices": [{"id": "I16_C0", "text": "adjusted"}, {"id": "I16_C1", "text": "appealed"}, {"id": "I16_C2", "text": "filed"}, {"id": "I16_C3", "text": "voided"}], "correctId": "I16_C0", "correctText": "adjusted", "strategy": "Additional payment after a correction = adjusted claim. Think “adjusted = changed/corrected.”", "rationales": {"I16_C0": "Correct. An adjusted claim has a payment correction that can result in additional payment to the provider.", "I16_C1": "An appeal challenges a denial or decision; it is not the name for a payment correction that adds payment.", "I16_C2": "Filed only means submitted; it does not mean corrected with extra payment.", "I16_C3": "Voided means Medicaid should not have paid the claim and payment is taken back."}}, {"id": "q18", "n": 18, "question": "A(n) __________ claim is one that Medicaid should not have originally paid, and results in a deduction from the lump-sum payment made to the provider.", "choices": [{"id": "I17_C0", "text": "adjusted"}, {"id": "I17_C1", "text": "appealed"}, {"id": "I17_C2", "text": "filed"}, {"id": "I17_C3", "text": "voided"}], "correctId": "I17_C3", "correctText": "voided", "strategy": "If Medicaid should not have paid the claim in the first place, the claim is voided. Voided means take it back.", "rationales": {"I17_C0": "Adjusted claims correct payment; they may add payment or correct details, but this question says it should not have been paid at all.", "I17_C1": "Appealed means the provider is challenging a decision; it is not the take-back category.", "I17_C2": "Filed just means submitted; it does not describe a claim that Medicaid should not have paid.", "I17_C3": "Correct. A voided claim should not have been paid and results in a deduction from the provider’s lump-sum payment."}}, {"id": "q19", "n": 19, "question": "Federal regulations require Medicaid to establish and maintain a(n) __________ program, which safeguards against unnecessary or inappropriate use of Medicaid services or excess payments and assesses the quality of those services.", "choices": [{"id": "I18_C0", "text": "early and periodic screening, diagnostic, and treatment"}, {"id": "I18_C1", "text": "eligibility verification"}, {"id": "I18_C2", "text": "recipient eligibility verification"}, {"id": "I18_C3", "text": "surveillance and utilization review"}], "correctId": "I18_C3", "correctText": "surveillance and utilization review", "strategy": "The words “unnecessary,” “inappropriate use,” “excess payments,” and “quality” point to surveillance and utilization review.", "rationales": {"I18_C0": "EPSDT is the child screening and treatment benefit, not the program integrity review system.", "I18_C1": "Eligibility verification checks whether the patient is covered; it does not review utilization, overpayment, and quality.", "I18_C2": "Recipient eligibility verification focuses on coverage status, not broad surveillance and utilization review.", "I18_C3": "Correct. SURS protects against unnecessary or inappropriate use, excess payments, and reviews quality of services."}}, {"id": "q20", "n": 20, "question": "A Medicaid card issued for the “Unborn child of ...,” includes the __________ on the card.", "choices": [{"id": "I19_C0", "text": "birth father’s last name"}, {"id": "I19_C1", "text": "given name of the child"}, {"id": "I19_C2", "text": "name as BABY BOY or GIRL"}, {"id": "I19_C3", "text": "pregnant woman’s name"}], "correctId": "I19_C3", "correctText": "pregnant woman’s name", "strategy": "For “Unborn child of…” the card identifies the pregnant woman, not a baby name that does not exist yet.", "rationales": {"I19_C0": "The birth father’s last name is not the identifying name used for this Medicaid card format.", "I19_C1": "The child has not been born/named yet in this card format.", "I19_C2": "That is not the card wording described by “Unborn child of…” in this question.", "I19_C3": "Correct. The card for “Unborn child of…” includes the pregnant woman’s name."}}, {"id": "e1", "n": "C1", "question": "A patient has Medicare and Medicaid. The office sees that a third-party liability policy may cover the injury. What should the billing specialist remember first?", "choices": [{"id": "a", "text": "Medicaid is usually payer of last resort when another payer is responsible."}, {"id": "b", "text": "Medicaid always pays first because it is a public program."}, {"id": "c", "text": "The patient should automatically be billed for the full charge."}, {"id": "d", "text": "The provider should void the claim before checking other coverage."}], "correctId": "a", "correctText": "Medicaid is usually payer of last resort when another payer is responsible.", "strategy": "When you see another medical or liability payer, think payer order before payment.", "rationales": {"a": "Correct. Medicaid generally reimburses last when another payer is responsible.", "b": "No. Public program does not mean first payer. Other responsible payers must be considered.", "c": "No. Medicaid rules protect patients from improper balance billing when providers accept Medicaid.", "d": "No. Voiding is used when a paid claim should not have been paid, not before payer order is reviewed."}}, {"id": "e2", "n": "C2", "question": "A child enrolled in Medicaid is due for routine screening, dental, hearing, and vision services. Which Medicaid benefit is being tested?", "choices": [{"id": "a", "text": "EPSDT"}, {"id": "b", "text": "QMB"}, {"id": "c", "text": "QDWI"}, {"id": "d", "text": "FMAP"}], "correctId": "a", "correctText": "EPSDT", "strategy": "Child + screening + diagnostic/treatment follow-up = EPSDT.", "rationales": {"a": "Correct. EPSDT is the Medicaid child screening, diagnostic, and treatment benefit.", "b": "QMB is Medicare cost-sharing help, not pediatric screening.", "c": "QDWI is Part A premium help for certain disabled working individuals.", "d": "FMAP is the federal share of Medicaid funding to a state."}}, {"id": "e3", "n": "C3", "question": "A provider receives additional payment after Medicaid corrects a previously processed claim. Which term best fits?", "choices": [{"id": "a", "text": "Adjusted claim"}, {"id": "b", "text": "Voided claim"}, {"id": "c", "text": "MAGI"}, {"id": "d", "text": "CHIP"}], "correctId": "a", "correctText": "Adjusted claim", "strategy": "Additional payment after correction means adjusted, not voided.", "rationales": {"a": "Correct. Adjusted claims involve payment corrections and may result in additional payment.", "b": "Voided means Medicaid should not have paid and money is deducted back.", "c": "MAGI is income methodology, not claim correction.", "d": "CHIP expands coverage for uninsured children, not claim payment correction."}}, {"id": "e4", "n": "C4", "question": "Which question best helps a student separate SLMB from QDWI?", "choices": [{"id": "a", "text": "Is the clue Part B premiums, or Part A premiums for a disabled working individual?"}, {"id": "b", "text": "Is the patient receiving pediatric dental screening?"}, {"id": "c", "text": "Is the provider accepting payment in full?"}, {"id": "d", "text": "Is Medicaid paying after a liability payer?"}], "correctId": "a", "correctText": "Is the clue Part B premiums, or Part A premiums for a disabled working individual?", "strategy": "For these look-alike acronyms, do not memorize letters only. Attach each acronym to the exact cost it helps pay.", "rationales": {"a": "Correct. SLMB connects to Part B premiums; QDWI connects to Part A premiums for certain disabled working individuals.", "b": "That clue points to EPSDT, not Medicare Savings Program categories.", "c": "That is a provider payment rule, not SLMB versus QDWI.", "d": "That is payer-of-last-resort logic, not Medicare Savings Program identification."}}, {"id": "e5", "n": "C5", "question": "A state’s federal Medicaid match is calculated by comparing the state’s average per capita income with the national average. Which term is being described?", "choices": [{"id": "a", "text": "FMAP"}, {"id": "b", "text": "MEVS"}, {"id": "c", "text": "PACE"}, {"id": "d", "text": "SURS"}], "correctId": "a", "correctText": "FMAP", "strategy": "Funding formula + state income comparison = FMAP.", "rationales": {"a": "Correct. FMAP is the federal medical assistance percentage paid to the state.", "b": "MEVS verifies eligibility electronically; it is not a funding formula.", "c": "PACE is community-based care for older adults who need nursing-facility-level care.", "d": "SURS is surveillance/utilization review for program integrity."}}];
+const FLASH = [{"cat": "Big Picture", "front": "Title XIX = Medicaid", "back": "Medicaid is the federal Title XIX medical assistance program. The law is federal, but states administer the program, so state rules and names may vary.", "check": "Which phrase best captures Medicaid structure?", "opts": ["Federal law, state-administered", "City program only", "Private employer insurance"], "ans": 0}, {"cat": "Big Picture", "front": "Medicaid vs. Medicare", "back": "Medicaid is need-based medical assistance. Medicare is federal insurance mainly tied to age, disability, or ESRD. A patient can have both.", "check": "A low-income Medicare patient may also need help with premiums and cost sharing. Which program logic helps?", "opts": ["Medicare Savings Programs under Medicaid", "Commercial group plan only", "Workers’ compensation"], "ans": 0}, {"cat": "Eligibility", "front": "FPL", "back": "Federal Poverty Level means annual income guidelines from the federal government. Many programs use FPL percentages to decide eligibility.", "check": "What does FPL describe?", "opts": ["Annual federal income guideline", "A claim correction", "A Medicaid card format"], "ans": 0}, {"cat": "Eligibility", "front": "MAGI", "back": "Modified Adjusted Gross Income is the main income methodology used for many children, pregnant people, parents, and adults.", "check": "MAGI is mainly about what?", "opts": ["Income eligibility method", "Electronic eligibility verification", "Payment take-back"], "ans": 0}, {"cat": "Medicare Savings", "front": "QMB", "back": "Qualified Medicare Beneficiary: helps pay Medicare premiums, deductibles, and coinsurance for eligible Medicare beneficiaries. It is the “bigger help” category.", "check": "Which clue points to QMB?", "opts": ["Premiums + deductibles + coinsurance", "Only Part A after returning to work", "Only pediatric screening"], "ans": 0}, {"cat": "Medicare Savings", "front": "SLMB", "back": "Specified Low-Income Medicare Beneficiary: helps with Medicare Part B premiums, often connected to the 100–120% FPL clue in textbook questions.", "check": "SLMB mainly helps with what?", "opts": ["Medicare Part B premiums", "Unborn-child card naming", "Voided Medicaid claim"], "ans": 0}, {"cat": "Medicare Savings", "front": "QDWI", "back": "Qualified Disabled and Working Individuals: helps certain disabled people pay Medicare Part A premiums after losing premium-free Part A because of work.", "check": "Which words point to QDWI?", "opts": ["Disabled + working + Part A premium", "Child screening + dental + vision", "Payer of last resort"], "ans": 0}, {"cat": "Children", "front": "CHIP", "back": "CHIP expands coverage for uninsured children. It allowed states to create or expand programs connected to Medicaid eligibility.", "check": "CHIP expands coverage mainly for whom?", "opts": ["Uninsured children", "Only nursing facility residents", "Only providers"], "ans": 0}, {"cat": "Children", "front": "EPSDT", "back": "Early and Periodic Screening, Diagnostic, and Treatment provides child checkups plus dental, hearing, vision, and other screening and follow-up services.", "check": "EPSDT is more than a simple checkup because it includes:", "opts": ["Screening, diagnosis, and treatment", "Only billing appeals", "Only Medicare Part B premiums"], "ans": 0}, {"cat": "Long-Term Care", "front": "PACE", "back": "Programs of All-Inclusive Care for the Elderly provides comprehensive community-based services for people 55+ who need nursing-facility-level care.", "check": "PACE is an alternative to what?", "opts": ["Institutional nursing facility care", "Commercial group insurance", "A DMV verification"], "ans": 0}, {"cat": "Long-Term Care", "front": "Community spouse", "back": "Spousal impoverishment rules protect some income/resources so the spouse at home does not become impoverished when the other spouse needs nursing facility Medicaid.", "check": "The spouse at home is the:", "opts": ["Community spouse", "Surviving spouse", "Payer spouse"], "ans": 0}, {"cat": "Claims", "front": "Payer of last resort", "back": "When another medical or liability payer exists, Medicaid pays last. Always ask: who is responsible before Medicaid?", "check": "If another liability policy should pay, Medicaid pays:", "opts": ["Last", "First", "Never verifies eligibility"], "ans": 0}, {"cat": "Claims", "front": "Payment in full", "back": "A provider accepting a Medicaid patient must accept the Medicaid-determined payment as payment in full. Balance billing is generally not allowed.", "check": "Medicaid-determined payment means:", "opts": ["Payment in full", "Only a suggestion", "Always partial payment"], "ans": 0}, {"cat": "Claims", "front": "MEVS", "back": "Medicaid Eligibility Verification System lets providers electronically verify Medicaid eligibility through the state’s eligibility file.", "check": "MEVS helps with:", "opts": ["Eligibility verification", "Spousal impoverishment", "Part A premium help"], "ans": 0}, {"cat": "Claims", "front": "Adjusted vs. voided", "back": "Adjusted = corrected payment, sometimes additional payment. Voided = Medicaid should not have paid; money is deducted/taken back.", "check": "Claim should not have been paid at all. Which word?", "opts": ["Voided", "Adjusted", "MAGI"], "ans": 0}, {"cat": "Program Integrity", "front": "Surveillance and utilization review", "back": "This protects Medicaid against unnecessary/inappropriate service use, excess payments, and quality problems.", "check": "Which clues point here?", "opts": ["Unnecessary use + excess payments + quality", "Dental/hearing/vision screening", "Unborn-child naming"], "ans": 0}, {"cat": "Eligibility", "front": "Valid Medicaid card", "back": "Patients must present a valid Medicaid card because eligibility can depend on monthly income and can change.", "check": "Why verify each time?", "opts": ["Eligibility may change with monthly income", "The card is only decorative", "Medicaid always pays first"], "ans": 0}, {"cat": "Special card", "front": "Unborn child of…", "back": "A Medicaid card issued for “Unborn child of…” includes the pregnant woman’s name, not a baby name that does not exist yet.", "check": "The card includes the:", "opts": ["Pregnant woman’s name", "Birth father’s last name", "Given name of the child"], "ans": 0}];
+const LESSONS = [{"id": "map", "title": "Medicaid Big Picture Map", "tag": "Start here", "body": "Medicaid is not simply “insurance for poor people.” It is a federal-state medical assistance program with eligibility, verification, payer-order, and claim-correction rules. The trick is to know whether a question is asking about eligibility, coverage group, child services, long-term care, or claim processing."}, {"id": "elig", "title": "Eligibility Engine", "tag": "FPL • MAGI • Monthly verification", "body": "Eligibility questions usually hide the answer in one phrase: federal poverty level means annual guideline; MAGI means the modern income calculation method; monthly income explains why the card must be valid and eligibility must be verified."}, {"id": "msp", "title": "Medicare Savings Programs", "tag": "QMB • SLMB • QDWI", "body": "These questions look similar on purpose. QMB is broader help: premiums, deductibles, coinsurance. SLMB is Part B premium help. QDWI is Part A premium help for certain disabled people who are working."}, {"id": "child", "title": "Children and Community Care", "tag": "CHIP • EPSDT • PACE", "body": "CHIP expands coverage for uninsured children. EPSDT gives children screening, diagnosis, and treatment. PACE supports older adults in the community when they need nursing-facility-level care."}, {"id": "claims", "title": "Claims and Provider Rules", "tag": "MEVS • Last payer • Payment in full", "body": "Provider questions usually test workflow: verify eligibility through MEVS, remember Medicaid pays last when another payer exists, and accept Medicaid payment as payment in full when accepting Medicaid patients."}, {"id": "integrity", "title": "Corrections and Program Integrity", "tag": "Adjusted • Voided • SURS", "body": "Adjusted means correction, possibly extra payment. Voided means Medicaid should not have paid and money is taken back. Surveillance and utilization review protects the program from unnecessary use, inappropriate use, overpayment, and quality problems."}];
+let state = JSON.parse(localStorage.getItem('medicaidMasteryState') || '{}');
+state.lessons = state.lessons || {};
+state.flash = state.flash || {};
+state.practice = state.practice || {};
+state.test = state.test || {};
+state.study = state.study || {};
+let soundOn = state.soundOn ?? true;
+let currentFlash = state.currentFlash || 0;
+let currentPractice = state.currentPractice || 0;
+let currentTest = 0;
+let timerHandle = null; let timeLeft = 30;
+
+const pages = [
+  ['dashboard','Dashboard','btn-blue'], ['lessons','Lessons','btn-purple'], ['flashcards','Flashcards','btn-orange'],
+  ['practice','Practice','btn-green'], ['test','Challenge','btn-red'], ['reflection','Reflection','btn-dark']
+];
+
+function saveState() {
+  state.currentFlash = currentFlash; state.soundOn = soundOn;
+  state.ref1 = document.getElementById('ref1')?.value || state.ref1 || '';
+  state.ref2 = document.getElementById('ref2')?.value || state.ref2 || '';
+  state.ref3 = document.getElementById('ref3')?.value || state.ref3 || '';
+  localStorage.setItem('medicaidMasteryState', JSON.stringify(state));
+  updateProgress();
+}
+function beep(type='good') {
+  if(!soundOn) return;
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = type==='bad'?130: type==='flip'?420:760;
+    g.gain.value=.055; o.start();
+    setTimeout(()=>{o.stop(); ctx.close();}, type==='bad'?180:120);
+  } catch(e) {}
+}
+function toggleSound() {
+  soundOn = !soundOn; state.soundOn = soundOn; document.getElementById('soundBtn').textContent = soundOn?'🔊 Sound On':'🔇 Sound Off'; saveState();
+}
+function initNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = pages.map((p,i)=>`<button class="navbtn ${p[2]} ${i===0?'active':''}" onclick="showPage('${p[0]}')">${p[1]}</button>`).join('');
+}
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.navbtn').forEach((b,i)=>b.classList.toggle('active', pages[i][0]===id));
+  if(id==='flashcards') renderFlash();
+  if(id==='practice') renderPractice();
+  if(id==='test') renderTestMap();
+  updateProgress();
+}
+function updateProgress() {
+  const lp = Object.keys(state.lessons).length; const fp = Object.values(state.flash).filter(x=>x.studied).length;
+  const sc = Object.values(state.study).filter(Boolean).length;
+  document.getElementById('lessonProgress').textContent = `${lp} / ${LESSONS.length}`;
+  document.getElementById('lessonBar').style.width = `${Math.round(lp/LESSONS.length*100)}%`;
+  document.getElementById('flashProgress').textContent = `${fp} / ${FLASH.length}`;
+  document.getElementById('flashBar').style.width = `${Math.round(fp/FLASH.length*100)}%`;
+  document.getElementById('studyCount').textContent = `${sc} marked`;
+  const vals = Object.values(state.practice); const done=vals.filter(v=>v.answered).length; const good=vals.filter(v=>v.correct).length;
+  document.getElementById('practiceScore').textContent = done?`${good} / ${done} correct`:'Not started';
+}
+
+function strategyBox(text) {
+  return `<div class="strategy"><div class="teacher-icon"><span class="glasses"></span></div><div><strong>Strategy from Hilary:</strong><br>${text}</div></div>`;
+}
+function answerLessonChoice(el, correct) {
+  const box = el.closest('.lesson-action');
+  box.querySelectorAll('.lesson-choice').forEach(b=>b.disabled=true);
+  el.classList.add(correct ? 'correct' : 'wrong');
+  beep(correct ? 'good' : 'bad');
+  const msg = box.querySelector('.lesson-result');
+  if(msg) msg.textContent = correct ? 'Good. You used the clue, not just the familiar word.' : 'Review the clue again. Ask what the question is really asking: eligibility, payer order, child benefit, premium help, or claim correction.';
+}
+function lessonActivity(id) {
+  const data = {
+    map: {title:'Tap the clue: What is Medicaid’s structure?', q:'A question says Title XIX is federal law but the program is administered by _____.', a:['federal offices only','state Medicaid agencies','commercial insurance companies'], correct:1, tip:'Do not stop at “federal.” Medicaid is federal law, but state-administered.'},
+    elig: {title:'Eligibility clue check', q:'A question asks for the annual income guideline used to decide many program limits. Which word should students choose?', a:['FPL','MEVS','SURS'], correct:0, tip:'FPL = Federal Poverty Level. It is an income guideline, not a claim system.'},
+    msp: {title:'Acronym separator', q:'The patient needs help with Medicare Part B premiums only. Which acronym fits best?', a:['QMB','SLMB','QDWI'], correct:1, tip:'SLMB is tied to Part B premium help. QMB is broader; QDWI is disabled + working + Part A premium.'},
+    child: {title:'Child benefit clue check', q:'A child needs screening, diagnosis, treatment, dental, hearing, and vision services. Which benefit is being tested?', a:['EPSDT','PACE','QMB'], correct:0, tip:'Child + screening + diagnostic/treatment follow-up = EPSDT.'},
+    claims: {title:'Claim workflow check', q:'A patient has Medicaid, but another liability payer may be responsible. What should come to mind first?', a:['Medicaid pays last','Bill the patient the full charge','Void the claim immediately'], correct:0, tip:'Another responsible payer means payer order. Medicaid is usually payer of last resort.'},
+    integrity: {title:'Correction vs take-back', q:'Medicaid should not have paid the original claim and deducts money back. Which term fits?', a:['Adjusted','Voided','MAGI'], correct:1, tip:'Voided means take it back. Adjusted means corrected payment.'}
+  }[id];
+  return `<div class="lesson-action"><h3>${data.title}</h3><p><b>${data.q}</b></p>${data.a.map((x,i)=>`<button class="lesson-choice" onclick="answerLessonChoice(this,${i===data.correct})">${x}</button>`).join('')}<p class="lesson-result section-sub"></p><div class="callout-tile">${data.tip}</div></div>`;
+}
+
+function renderLessons() {
+  const tabs = document.getElementById('lessonTabs');
+  tabs.innerHTML = LESSONS.map((l,i)=>`<button class="lesson-tab ${i===0?'active':''}" onclick="openLesson(${i})">${i+1}. ${l.title}</button>`).join('');
+  openLesson(0);
+}
+
+function lessonTip(id) {
+  const tips = {
+    map:'First name the category. Is the question asking who runs Medicaid, who qualifies, what benefit applies, or how the claim is paid? Once you name the category, the answer becomes much easier.',
+    elig:'When you see income language, slow down. FPL means the annual guideline. MAGI means the income calculation method. MEVS means checking whether the patient is eligible today.',
+    msp:'Do not let QMB, SLMB, and QDWI blur together. QMB is the bigger help; SLMB is Part B premium help; QDWI is disabled + working + Part A premium.',
+    child:'For children, separate CHIP from EPSDT. CHIP expands coverage for uninsured children. EPSDT is the actual screening, diagnostic, and treatment benefit for children on Medicaid.',
+    claims:'For claim questions, ask: Did we verify eligibility? Is another payer responsible? Did the provider accept Medicaid? Was the claim corrected or taken back?',
+    integrity:'Correction words matter. Adjusted means a payment correction. Voided means Medicaid should not have paid and money is deducted back. SURS means monitoring unnecessary use, excess payment, and quality.'
+  };
+  return tips[id] || 'Look for the key clue, then match it to the exact Medicaid category.';
+}
+
+function openLesson(i) {
+  document.querySelectorAll('.lesson-tab').forEach((b,j)=>b.classList.toggle('active', i===j));
+  const l=LESSONS[i]; state.lessons[l.id]=true; saveState();
+  let special='';
+  if(l.id==='map') special = `<div class="flowline"><div class="node">Federal Title XIX</div><div class="arrow">→</div><div class="node">State-administered</div><div class="arrow">→</div><div class="node">Eligibility verified</div><div class="arrow">→</div><div class="node">Claims paid by rules</div></div>`;
+  if(l.id==='elig') special = `<div class="compare"><div class="mini"><h3>FPL</h3><p>Annual federal income guideline.</p></div><div class="mini"><h3>MAGI</h3><p>Income method for many eligibility groups.</p></div><div class="mini"><h3>Monthly income</h3><p>Why valid card and verification matter.</p></div><div class="mini"><h3>MEVS</h3><p>Electronic eligibility verification.</p></div></div>`;
+  if(l.id==='msp') special = `<div class="table-wrap"><table><thead><tr><th>Program</th><th>Key clue</th><th>Memory hook</th></tr></thead><tbody><tr><td>QMB</td><td>Premiums + deductibles + coinsurance</td><td>Bigger help</td></tr><tr><td>SLMB</td><td>Part B premiums</td><td>B = B premium</td></tr><tr><td>QDWI</td><td>Disabled + working + Part A premium</td><td>Working disabled</td></tr></tbody></table></div>`;
+  if(l.id==='child') special = `<div class="flowline"><div class="node">Child uninsured?</div><div class="arrow">→</div><div class="node">CHIP</div><div class="arrow">→</div><div class="node">Child on Medicaid?</div><div class="arrow">→</div><div class="node">EPSDT</div></div>`;
+  if(l.id==='claims') special = `<div class="compare"><div class="mini"><h3>MEVS</h3><p>Verify eligibility before billing.</p></div><div class="mini"><h3>Other payer?</h3><p>Medicaid pays last.</p></div><div class="mini"><h3>Accept Medicaid?</h3><p>Payment in full.</p></div><div class="mini"><h3>Correction?</h3><p>Adjusted or voided.</p></div></div>`;
+  if(l.id==='integrity') special = `<div class="activity-row"><div><h3>Match the term</h3><div class="term" onclick="pickTerm(this,'adjusted')">Additional payment after correction</div><div class="term" onclick="pickTerm(this,'voided')">Should not have been paid</div><div class="term" onclick="pickTerm(this,'surs')">Unnecessary use / excess payment / quality</div></div><div><h3>Answer buckets</h3><div class="bucket" onclick="dropTerm(this,'adjusted')">Adjusted claim</div><div class="bucket" onclick="dropTerm(this,'voided')">Voided claim</div><div class="bucket" onclick="dropTerm(this,'surs')">Surveillance & utilization review</div></div></div><p id="matchMsg" class="section-sub"></p>`;
+  document.getElementById('lessonStage').innerHTML = `<span class="pill">${l.tag}</span><h2 class="section-title">${l.title}</h2><p class="section-sub">${l.body}</p>${special}${lessonActivity(l.id)}${strategyBox(lessonTip(l.id))}`;
+}
+let selectedTerm=null;
+function pickTerm(el,val) { document.querySelectorAll('.term').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selectedTerm=val; }
+function dropTerm(el,val) { if(!selectedTerm) return; if(selectedTerm===val){el.classList.add('hit'); beep('good'); document.getElementById('matchMsg').textContent='Good. You matched the concept to the right Medicaid term.'} else {beep('bad'); document.getElementById('matchMsg').textContent='Not yet. Read the clue: correction, take-back, or program integrity?'} }
+
+function renderFlashMap() {
+  document.getElementById('flashMap').innerHTML = FLASH.map((f,i)=>`<button class="dot ${i===currentFlash?'current':''} ${state.flash[i]?.studied?'good':''} ${state.study['f'+i]?'study flagged':''}" onclick="currentFlash=${i};renderFlash()">${i+1}</button>`).join('');
+}
+function renderFlash() {
+  const f=FLASH[currentFlash]; state.flash[currentFlash]=state.flash[currentFlash]||{};
+  const marked = state.study['f'+currentFlash];
+  document.getElementById('flashMount').innerHTML = `<div class="flash-wrap">
+    <div class="flash-card ${marked?'study':''}" id="flashCard" onclick="flipCard(event)">
+      <div class="face front">
+        <div><span class="flash-cat">${f.cat}</span><h2 class="flash-title">${f.front}</h2><p>Click the card to flip. Mark it orange if you need to study it.</p></div>
+        <div class="no-print"><button class="btn-orange studybtn ${marked?'active':''}" onclick="toggleStudy(event,'f${currentFlash}')">⚑ Need to study</button></div>
+      </div>
+      <div class="face back">
+        <div><span class="flash-cat" style="background:#e0f2fe;color:#0f172a">${f.cat}</span><h2>${f.front}</h2><p class="section-sub">${f.back}</p></div>
+        <div class="reveal-zone no-print" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+          <b>Concept check:</b><p>${f.check}</p>
+          <div class="flash-check-options">${f.opts.map((opt,i)=>`<button class="flash-opt ${state.flash[currentFlash].picked!==undefined ? (i===f.ans?'correct':(state.flash[currentFlash].picked===i?'wrong':'')) : ''}" onclick="answerFlashCheck(event,${i})">${opt}</button>`).join('')}</div>
+          <button class="btn-blue" onclick="revealFlashAnswer(event)">Reveal answer</button>
+          <button class="btn-orange studybtn ${marked?'active':''}" onclick="toggleStudy(event,'f${currentFlash}')">⚑ Need to study</button>
+          <div class="answer-box" id="flashAnswer">Answer: ${f.opts[f.ans]}<br><br>${f.back}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap" class="no-print">
+    <button class="btn-light" onclick="prevFlash()">← Previous</button><button class="btn-purple" onclick="nextFlash()">Next →</button>
+  </div>`;
+  renderFlashMap(); updateProgress();
+}
+function flipCard(e) {
+  if(e.target.closest('button') || e.target.closest('.reveal-zone')) return;
+  document.getElementById('flashCard').classList.toggle('flipped'); state.flash[currentFlash].studied=true; beep('flip'); saveState();
+}
+function revealFlashAnswer(e) { e.preventDefault(); e.stopPropagation(); document.getElementById('flashAnswer').classList.add('show'); beep('good'); }
+function answerFlashCheck(e,idx) {
+  e.preventDefault(); e.stopPropagation();
+  const f=FLASH[currentFlash];
+  state.flash[currentFlash]=state.flash[currentFlash]||{};
+  state.flash[currentFlash].picked=idx;
+  state.flash[currentFlash].studied=true;
+  beep(idx===f.ans?'good':'bad');
+  saveState();
+  renderFlash();
+  document.getElementById('flashCard').classList.add('flipped');
+  document.getElementById('flashAnswer').classList.add('show');
+}
+function nextFlash(){currentFlash=(currentFlash+1)%FLASH.length; renderFlash(); saveState();}
+function prevFlash(){currentFlash=(currentFlash-1+FLASH.length)%FLASH.length; renderFlash(); saveState();}
+function toggleStudy(e,key){e.preventDefault(); e.stopPropagation(); state.study[key]=!state.study[key]; beep(state.study[key]?'good':'flip'); saveState(); renderFlash(); renderPracticeMap(); renderTestMap();}
+
+function renderPracticeMap() {
+  const m=document.getElementById('practiceMap'); if(!m) return;
+  m.innerHTML = ALLQ.map((q,i)=>`<button class="dot ${i===currentPractice?'current':''} ${state.practice[q.id]?.answered?(state.practice[q.id].correct?'good':'bad'):''} ${state.study[q.id]?'study flagged':''}" onclick="currentPractice=${i};renderPractice()">${i+1}</button>`).join('');
+}
+function renderPractice() {
+  renderPracticeMap();
+  const q=ALLQ[currentPractice]; const record=state.practice[q.id]||{};
+  document.getElementById('practiceMount').innerHTML = `<h3>Question ${currentPractice+1} of ${ALLQ.length}</h3><p style="font-size:1.16rem;font-weight:800;line-height:1.45">${q.question}</p>
+    <div>${q.choices.map(c=>`<button class="option ${record.answered?(c.id===q.correctId?'correct':(record.selected===c.id?'wrong':'')):''}" onclick="answerPractice('${q.id}','${c.id}')">${c.text}</button>`).join('')}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn-orange" onclick="markQuestionStudy('${q.id}')">⚑ Need to study</button>
+      <button class="btn-light" onclick="currentPractice=Math.max(0,currentPractice-1);renderPractice()">← Previous</button>
+      <button class="btn-purple" onclick="currentPractice=Math.min(ALLQ.length-1,currentPractice+1);renderPractice()">Next →</button>
+    </div>
+    <div class="feedback ${record.answered?'show':''}" id="fb">
+      <h3>${record.correct?'Correct.':'Review this.'}</h3>
+      ${strategyBox(q.strategy)}
+      ${q.choices.map(c=>`<p><b>${c.text}</b><br>${q.rationales[c.id]}</p>`).join('')}
+    </div>`;
+}
+function answerPractice(qid,cid) {
+  const q=ALLQ.find(x=>x.id===qid); const correct=cid===q.correctId;
+  state.practice[qid]={answered:true,selected:cid,correct}; beep(correct?'good':'bad'); saveState(); renderPractice();
+}
+function markQuestionStudy(qid) {state.study[qid]=!state.study[qid]; beep('good'); saveState(); renderPractice();}
+
+function renderTestMap() {
+  const el=document.getElementById('testMap'); if(!el) return;
+  el.innerHTML = QUESTIONS.map((q,i)=>`<button class="dot ${i===currentTest?'current':''} ${state.test[q.id]?.answered?(state.test[q.id].correct?'good':'bad'):''} ${state.study['t'+q.id]?'study flagged':''}" onclick="currentTest=${i};renderTestQuestion(false)">${i+1}</button>`).join('');
+}
+function startTest() {
+  state.test={}; currentTest=0; saveState(); renderTestQuestion(true);
+}
+function renderTestQuestion(resetTimer=true) {
+  clearInterval(timerHandle);
+  renderTestMap();
+  const q=QUESTIONS[currentTest]; const rec=state.test[q.id]||{};
+  document.getElementById('testMount').innerHTML = `<h3>Challenge ${currentTest+1} of ${QUESTIONS.length}</h3><p style="font-size:1.16rem;font-weight:900;line-height:1.45">${q.question}</p>
+  <div>${q.choices.map(c=>`<button class="option ${rec.answered?(c.id===q.correctId?'correct':(rec.selected===c.id?'wrong':'')):''}" onclick="answerTest('${q.id}','${c.id}')">${c.text}</button>`).join('')}</div>
+  <div class="feedback ${rec.answered?'show':''}"><h3>${rec.correct?'Correct.':'Review this.'}</h3>${strategyBox(q.strategy)}</div>`;
+  if(resetTimer) runTimer();
+}
+function runTimer() {
+  timeLeft=30; document.getElementById('timer').textContent=timeLeft;
+  timerHandle=setInterval(()=>{timeLeft--; document.getElementById('timer').textContent=timeLeft; if(timeLeft<=0){clearInterval(timerHandle); answerTest(QUESTIONS[currentTest].id,null,true)}},1000);
+}
+function answerTest(qid,cid,timeout=false) {
+  const q=QUESTIONS.find(x=>x.id===qid); const correct=cid===q.correctId;
+  state.test[qid]={answered:true,selected:cid,correct,timeout}; beep(correct?'good':'bad'); saveState(); renderTestQuestion(false);
+  setTimeout(()=>{ if(currentTest<QUESTIONS.length-1){currentTest++; renderTestQuestion(true)} else {clearInterval(timerHandle); showTestResults();} }, 850);
+}
+function flagTestQuestion() {
+  const q=QUESTIONS[currentTest]; state.study['t'+q.id]=!state.study['t'+q.id]; beep('good'); saveState(); renderTestMap();
+}
+function showTestResults() {
+  clearInterval(timerHandle); const vals=QUESTIONS.map(q=>state.test[q.id]||{}); const good=vals.filter(v=>v.correct).length;
+  document.getElementById('testMount').innerHTML = `<h2>Challenge Complete</h2><p class="section-sub">Score: <b>${good} / ${QUESTIONS.length}</b></p>
+  <button class="btn-green" onclick="buildSummary();showPage('reflection')">Go to reflection summary</button>
+  <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>#</th><th>Result</th><th>Correct Answer</th><th>Strategy</th></tr></thead><tbody>${QUESTIONS.map((q,i)=>`<tr><td>${i+1}</td><td>${state.test[q.id]?.correct?'Correct':'Review'}</td><td>${q.correctText}</td><td>${q.strategy}</td></tr>`).join('')}</tbody></table></div>`;
+  renderTestMap();
+}
+function buildSummary() {
+  const practiceVals=ALLQ.map(q=>state.practice[q.id]).filter(Boolean);
+  const pGood=practiceVals.filter(x=>x.correct).length;
+  const testVals=QUESTIONS.map(q=>state.test[q.id]).filter(Boolean);
+  const tGood=testVals.filter(x=>x.correct).length;
+  const studyItems=[];
+  Object.keys(state.study).filter(k=>state.study[k]).forEach(k=>{
+    if(k.startsWith('f')) studyItems.push('Flashcard: '+FLASH[+k.slice(1)]?.front);
+    else if(k.startsWith('t')) {const q=QUESTIONS.find(x=>'t'+x.id===k); if(q) studyItems.push('Challenge Q'+q.n+': '+q.correctText);}
+    else {const q=ALLQ.find(x=>x.id===k); if(q) studyItems.push('Practice Q'+q.n+': '+q.correctText);}
+  });
+  const text = `MEDICAID MASTERY LAB SUMMARY\n\nLessons opened: ${Object.keys(state.lessons).length} / ${LESSONS.length}\nFlashcards studied: ${Object.values(state.flash).filter(x=>x.studied).length} / ${FLASH.length}\nGuided practice: ${practiceVals.length?`${pGood} / ${practiceVals.length} correct`:'Not completed'}\nTimed challenge: ${testVals.length?`${tGood} / ${testVals.length} correct`:'Not completed'}\n\nNeed to study:\n${studyItems.length?studyItems.map(x=>'• '+x).join('\n'):'• None marked yet'}\n\nReflection 1 — confusing idea:\n${document.getElementById('ref1')?.value||''}\n\nReflection 2 — clue that helped:\n${document.getElementById('ref2')?.value||''}\n\nReflection 3 — review plan:\n${document.getElementById('ref3')?.value||''}`;
+  document.getElementById('summaryBox').textContent=text; saveState();
+}
+function restoreReflections() {
+  ['ref1','ref2','ref3'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=state[id]||'';});
+}
+initNav(); renderLessons(); renderFlash(); renderPractice(); restoreReflections(); toggleSound(); toggleSound(); updateProgress();
+</script>
+</body>
+</html>
